@@ -2,6 +2,8 @@
 
 Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025.
 
+Note that `geocode/src/geocode.R` requires Google Maps API ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once.
+
 Sensitive columns dropped in separate repository:
 
 ```
