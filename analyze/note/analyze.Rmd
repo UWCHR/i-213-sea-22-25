@@ -39,10 +39,11 @@ df <- read_delim(here('analyze', 'input', file), delim='|') %>%
          fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),
          cy = year (apprehension_date))
 
-file <- "ERO_Admin_Arrests_LESA-STU-FINAL_Release.xlsx"
+ddp_arrests <- arrow::read_feather(
+  "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.feather"
+)
 
-ddp_arrests_sea <- read_excel(here('analyze', 'input', file), skip=6) %>%
-  janitor::clean_names() %>% 
+ddp_arrests_sea <- ddp_arrests %>% 
   mutate(apprehension_date = as.Date(apprehension_date),
          final_order_date = as.Date(final_order_date)) |>
   mutate(apprehension_method = fct(apprehension_method)) |>
@@ -52,23 +53,10 @@ ddp_arrests_sea <- read_excel(here('analyze', 'input', file), skip=6) %>%
   mutate(week = floor_date(apprehension_date, "week", week_start = "Monday"),
          month = floor_date(apprehension_date, "month"),
          cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
-         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
-         release = "DDP Dec") %>% 
+         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE))) %>% 
   filter(apprehension_aor == "Seattle Area of Responsibility")
 
-```
-
-```{r}
-
-i213_geo_cols <- df %>% 
-  dplyr::select(apprehension_landmark_descr,
-                app_ldmk_other_comment_text,
-                lat,
-                long,
-                county,
-                state)
-
-write_delim(i213_geo_cols, "sea_ldmks.csv", delim=',')
+rm(ddp_arrests)
 
 ```
 
@@ -147,7 +135,13 @@ dat_wide <- pivot_wider(dat, id_cols = month, names_from = source, values_from =
 
 ```{r}
 
-uwchr <- read_delim(here::here('analyze', 'input', 'ice_arrests_fy12-23ytd.csv.gz'), delim='|')
+# uwchr <- read_delim(here::here('analyze', 'input', 'ice_arrests_fy12-23ytd.csv.gz'), delim='|')
+
+url <- "https://drive.usercontent.google.com/download?id=1XAOS7t3ijImVXQ9G7l6xdCr_rBh8i4cz&export=download&authuser=0&confirm=t&uuid=0c4a4b74-5e5f-4f00-8c8a-eb00a56708f9&at=APcXIO3JvUiU3ilszJZ3EAuIE01Y:1772065031530"
+f <- tempfile(fileext = ".csv.gz")
+download.file(url, f, mode = "wb")
+
+uwchr <- read.delim(f, sep='|')
 
 uwchr_sea <- uwchr %>% 
   filter(area_of_responsibility == "Seattle Area of Responsibility") %>%
@@ -158,6 +152,8 @@ uwchr_sea <- uwchr %>%
          fy = as.numeric(substr(quarter(arrest_date, fiscal_start = 10, with_year = TRUE), 0, 4)),
          cy = year(arrest_date),
          source = "UWCHR")
+
+rm(uwchr)
   
 uwchr_sea_per_fy_quarter <- uwchr_sea %>% 
   count(fy_quarter, source)
