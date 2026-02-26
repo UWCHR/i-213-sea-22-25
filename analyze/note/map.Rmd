@@ -26,7 +26,7 @@ p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, r
 
 file <- "sea-i213s-2026-02-13-geocoded.csv"
 
-df <- read_delim(here('analyze', 'output', file), delim='|') %>% 
+df <- read_delim(here('analyze', 'input', file), delim='|') %>% 
   janitor::clean_names() %>% 
   mutate(apprehension_date = as.Date(apprehension_date),
          entry_date = as.Date(entry_date),
@@ -230,7 +230,7 @@ m1 <- ggplot(data = wa) +
 
 m1
 
-ggsave("wa-ice-pc-2025.png", dpi=300)
+ggsave("../output/wa-ice-pc-2025.png", dpi=300)
 
 ```
 
@@ -295,7 +295,7 @@ m1 <- ggplot(data = wa) +
 
 m1
 
-# ggsave("wa-ice-pc-2025.png", dpi=300)
+# ggsave("../output/wa-ice-pc-2025.png", dpi=300)
 
 ```
 
@@ -549,25 +549,25 @@ p1 <- counties %>%
   filter(apprehension_qtr == "2025.1") %>% 
   plot_county_pc()
 
-ggsave("2025-1-pc.png")
+ggsave("../output/2025-1-pc.png")
 
 p2 <- counties %>% 
   filter(apprehension_qtr == "2025.2") %>% 
   plot_county_pc()
 
-ggsave("2025-2-pc.png")
+ggsave("../output/2025-2-pc.png")
 
 p3 <- counties %>% 
   filter(apprehension_qtr == "2025.3") %>% 
   plot_county_pc()
 
-ggsave("2025-3-pc.png")
+ggsave("../output/2025-3-pc.png")
 
 p4 <- counties %>% 
   filter(apprehension_qtr == "2025.4") %>% 
   plot_county_pc()
 
-ggsave("2025-4-pc.png")
+ggsave("../output/2025-4-pc.png")
 
 ```
 
@@ -631,25 +631,25 @@ p1 <- sites %>%
   filter(cy_quarter == "2025.1") %>% 
   plot_cites
 
-ggsave("2025-1.png")
+ggsave("../output/2025-1.png")
 
 p2 <- sites %>%
   filter(cy_quarter == "2025.2") %>% 
   plot_cites
 
-ggsave("2025-2.png")
+ggsave("../output/2025-2.png")
 
 p3 <- sites %>%
   filter(cy_quarter == "2025.3") %>% 
   plot_cites
 
-ggsave("2025-3.png")
+ggsave("../output/2025-3.png")
 
 p4 <- sites %>%
   filter(cy_quarter == "2025.4") %>% 
   plot_cites
 
-ggsave("2025-4.png")
+ggsave("../output/2025-4.png")
 
 ```
 
@@ -711,25 +711,25 @@ p1 <- sites %>%
   filter(cy_quarter == "2025.1") %>% 
   plot_cites
 
-ggsave("2025-1.png")
+ggsave("../output/2025-1.png")
 
 p2 <- sites %>%
   filter(cy_quarter == "2025.2") %>% 
   plot_cites
 
-ggsave("2025-2.png")
+ggsave("../output/2025-2.png")
 
 p3 <- sites %>%
   filter(cy_quarter == "2025.3") %>% 
   plot_cites
 
-ggsave("2025-3.png")
+ggsave("../output/2025-3.png")
 
 p4 <- sites %>%
   filter(cy_quarter == "2025.4") %>% 
   plot_cites
 
-ggsave("2025-4.png")
+ggsave("../output/2025-4.png")
 
 ```
 
@@ -859,30 +859,30 @@ p1 <- counties %>%
   filter(fy_quarter == "2025.1") %>% 
   plot_county_pc()
 
-ggsave("2025-1-poo.png")
+ggsave("../output/2025-1-poo.png")
 
 p2 <- counties %>% 
   filter(fy_quarter == "2025.2") %>% 
   plot_county_pc()
 
-ggsave("2025-2-poo.png")
+ggsave("../output/2025-2-poo.png")
 
 p3 <- counties %>% 
   filter(fy_quarter == "2025.3") %>% 
   plot_county_pc()
 
-ggsave("2025-3-poo.png")
+ggsave("../output/2025-3-poo.png")
 
 p4 <- counties %>% 
   filter(fy_quarter == "2025.4") %>% 
   plot_county_pc()
 
-ggsave("2025-4-poo.png")
+ggsave("../output/2025-4-poo.png")
 
 p5 <- counties %>% 
   filter(fy_quarter == "2026.1") %>% 
   plot_county_pc()
 
-ggsave("2025-5-poo.png")
+ggsave("../output/2025-5-poo.png")
 
 ```
