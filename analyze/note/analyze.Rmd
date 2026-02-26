@@ -243,7 +243,9 @@ i213s_per_fy_pct_change <- df %>%
 
 i213s_per_fy_quarter_state_pct_change <- df %>% 
   filter(apprehension_date >= "2022-01-01",
-         state %in% c("WA", "OR")) %>% 
+         ) %>% 
+  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
+                           TRUE ~ "ALL OTHERS")) %>% 
   count(fy_quarter, state) %>% 
   group_by(state) %>% 
   mutate(prev_n = lag(n),
@@ -252,7 +254,7 @@ i213s_per_fy_quarter_state_pct_change <- df %>%
 
 p1 <- i213s_per_fy_quarter_state_pct_change %>% 
   ggplot(aes(x = fy_quarter, y = n, fill = state)) +
-  geom_col(position = position_dodge2(preserve = "single")) +
+  geom_col(position = "stack") +
   scale_x_discrete(breaks = every_nth(n = 2)) +
   labs(title = "I-213 arrests per FY quarter")
 
@@ -278,8 +280,8 @@ p2
 ```{r}
 
 i213s_per_fy_quarter_site_pct_change <- df %>% 
-  filter(apprehension_date >= "2024-01-01",
-         state %in% c("WA", "OR")
+  filter(apprehension_date >= "2022-01-01",
+         # state %in% c("WA", "OR")
          ) %>% 
   count(fy_quarter, site_code) %>% 
   group_by(site_code) %>% 
@@ -289,7 +291,7 @@ i213s_per_fy_quarter_site_pct_change <- df %>%
 
 p1 <- i213s_per_fy_quarter_site_pct_change %>% 
   ggplot(aes(x = fy_quarter, y = n, fill = site_code)) +
-  geom_col(position = position_dodge2(preserve = "single")) +
+  geom_col(position="stack") +
   scale_x_discrete(breaks = every_nth(n = 2)) +
   labs(title = "I-213 arrests per FY quarter by suboffice")
 
