@@ -7,3 +7,4 @@
 .RData
 *.Rproj
 .~lock*
+analyze/output/*.png
