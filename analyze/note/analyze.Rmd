@@ -629,30 +629,44 @@ dat1 <- ddp_arrests_sea %>%
            apprehension_criminality == "2 Pending Criminal Charges" ~ "Pending",
            apprehension_criminality == "3 Other Immigration Violator" ~ "None",
          )) %>% 
-  count(year, criminal_charge_status) %>% 
+  count(fy_quarter, criminal_charge_status) %>% 
   mutate(source = "DDP")
 
 dat2 <- df %>% 
   filter(apprehension_date >= "2022-01-01") %>%
   mutate(year = year(apprehension_date)) %>% 
-  count(year, criminal_charge_status) %>% 
+  count(fy_quarter, criminal_charge_status) %>% 
   mutate(source = "I213s")
 
-dat <- rbind(dat1, dat2)
+dat <- rbind(dat1, dat2) %>% 
+  mutate(fy_quarter = as.factor(as.character(fy_quarter)))
 
 p1 <- dat %>% 
-  ggplot(aes(x = year, y = n, fill = criminal_charge_status)) +
+  ggplot(aes(x = fy_quarter, y = n, fill = criminal_charge_status)) +
   geom_col() +
   facet_wrap(~source)
 
 p1
 
 p2 <- dat %>% 
-  ggplot(aes(x = year, y = n, fill = criminal_charge_status)) +
+  ggplot(aes(x = fy_quarter, y = n, fill = criminal_charge_status)) +
   geom_col(position = "fill") +
   facet_wrap(~source)
 
 p2
 
+
+```
+
+```{r}
+
+p1 <- df %>% 
+  filter(state %in% c("WA", "OR")) %>% 
+  count(fy_quarter, criminal_charge_status, site_code) %>% 
+  ggplot(aes(x = fy_quarter, y = n, fill = criminal_charge_status)) +
+  geom_col(position="stack") +
+  facet_wrap(~site_code)
+
+p1
 
 ```
