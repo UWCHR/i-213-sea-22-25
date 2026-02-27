@@ -190,3 +190,31 @@ ggplotly(p3)
 
 
 ```
+
+```{r arrests_pc_pct_change}
+
+annual_arrests_pc <- annual_arrests_pc %>% 
+  group_by(state, county) %>% 
+  mutate(prev_n = lag(arrests_pc),
+         pct_change = ((arrests_pc - prev_n)/prev_n) * 100 )
+
+quarterly_arrests_pc <- quarterly_arrests_pc %>% 
+  group_by(state, county) %>% 
+  mutate(prev_n = lag(arrests_pc),
+         pct_change = ((arrests_pc - prev_n)/prev_n) * 100 )
+
+p1 <- quarterly_arrests_pc %>% 
+  filter(state == "OR") %>% 
+  ggplot(aes(x = cy_quarter, y = pct_change, fill = county)) +
+  geom_col(position = position_dodge2(preserve = "single"))
+
+ggplotly(p1)
+
+p2 <- quarterly_arrests_pc %>% 
+  filter(state == "WA") %>% 
+  ggplot(aes(x = cy_quarter, y = pct_change, fill = county)) +
+  geom_col(position = position_dodge2(preserve = "single"))
+
+ggplotly(p2)
+
+```
