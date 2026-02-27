@@ -169,6 +169,8 @@ ggplotly(p2)
 
 ```
 
+
+
 ```{r map_wa, echo=TRUE, warning=FALSE}
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -417,6 +419,8 @@ m1
 ### Quarterly analysis 2025
 
 ```{r}
+
+# Need to double check this data constructed correctly
 
 dat_2 <- df %>% 
   filter(state %in% c("WA", "OR")) %>% 
