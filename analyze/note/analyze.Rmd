@@ -88,6 +88,19 @@ p2 <- df %>%
 
 p2
 
+p2.1 <- df %>% 
+  filter(area_of_responsibility_code == "SEA",
+         apprehension_date >= "2022-01-01") %>% 
+  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
+                         TRUE ~ "ALL OTHERS")) %>% 
+  count(month, state) %>% 
+  ggplot(aes(x = month, y = n, color = state, group=state)) +
+  geom_line() +
+  labs(title = "I-213 arrests per month",
+       subtitle = "Seattle AOR")
+
+p2.1
+
 p3 <- df %>% 
   filter(area_of_responsibility_code == "SEA",
          apprehension_date >= "2022-01-01") %>% 
@@ -100,6 +113,18 @@ p3 <- df %>%
        subtitle = "Seattle AOR")
 
 p3
+
+p3.1 <- df %>% 
+  filter(area_of_responsibility_code == "SEA",
+         apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>%
+  count(month, state) %>% 
+  ggplot(aes(x = month, y = n, fill = state)) +
+  geom_col(position='dodge') +
+  labs(title = "I-213 arrests per month",
+       subtitle = "Seattle AOR")
+
+p3.1
 
 ```
 
@@ -197,8 +222,14 @@ p1 <- dat %>%
 p1
 
 p2 <- dat %>% 
-  mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q")) %>% 
-  ggplot(aes(x = fy_quarter, y = n, color = source, group = source)) +
+  mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
+         # type = case_when(source == "I-213" ~ 1,
+         #                  TRUE ~ 2)
+         ) %>% 
+  ggplot(aes(x = fy_quarter, y = n, color = source, group = source,
+             # linetype = as.factor(type)
+             ),
+         )+
   ylim(0, NA) +
   geom_line() +
   scale_x_discrete(breaks = every_nth(n = 8)) +
@@ -249,7 +280,34 @@ i213s_per_fy_pct_change <- df %>%
 
 ```
 
-```{r}
+```{r arrests_per_state_cy}
+
+total_arrests_cy <- df %>% 
+  filter(apprehension_date >= "2022-01-01",
+         ) %>% 
+  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
+                           TRUE ~ "ALL OTHERS")) %>% 
+  count(cy) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 )
+
+arrests_per_state_cy <- df %>% 
+  filter(apprehension_date >= "2022-01-01",
+         ) %>% 
+  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
+                           TRUE ~ "ALL OTHERS")) %>% 
+  count(cy, state) %>% 
+  group_by(cy) %>% 
+  mutate(pct_annual_total = n / sum(n) * 100) %>% 
+  group_by(state) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 )
+  
+
+```
+
+
+```{r arrests_per_state_fy_quarter}
 
 i213s_per_fy_quarter_state_pct_change <- df %>% 
   filter(apprehension_date >= "2022-01-01",
