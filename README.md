@@ -11,7 +11,7 @@ Task order:
 
 Note that `geocode/src/geocode.R` requires Google Maps API ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once.
 
-Sensitive columns dropped in separate repository:
+Sensitive or fully redacted columns dropped in separate repository:
 
 ```
 cols_to_sanitize <- c(
@@ -51,3 +51,27 @@ redacted_cols <- c(
 	"record_of_deportable_excludable_alien_narrative"
 	)
 ```
+
+Columns created in this repo to facilitate analysis:
+
+- "week"
+- "any_convicted"                   
+- "any_pending"
+- "any_dismissed"                   
+- "any_overtunred"
+- "any_unknown"                     
+- "criminal_charge_status"
+- "total_children"                  
+- "any_usc"
+- "to_geocode"                      
+- "lat"
+- "long"                            
+- "county"
+- "state"                           
+- "month"
+- "cy_quarter"                      
+- "fy_quarter"
+- "fy"                              
+- "cy"
+- "days_since_entry"                
+- "years_since"
