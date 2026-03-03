@@ -119,10 +119,11 @@ p3.1 <- df %>%
          apprehension_date >= "2022-01-01",
          state %in% c("WA", "OR")) %>%
   count(month, state) %>% 
-  ggplot(aes(x = month, y = n, fill = state)) +
-  geom_col(position='dodge') +
-  labs(title = "I-213 arrests per month",
-       subtitle = "Seattle AOR")
+  ggplot(aes(x = month, y = n, color = state)) +
+  geom_line() +
+  labs(title = "Immigration arrests in Oregon outpace Washington in Oct.-Dec. 2025",
+       # subtitle = "Seattle AOR"
+       )
 
 p3.1
 
@@ -180,7 +181,7 @@ uwchr_sea <- uwchr %>%
          fy_quarter = as.factor(quarter(arrest_date, fiscal_start = 10, with_year = TRUE)),
          fy = as.numeric(substr(quarter(arrest_date, fiscal_start = 10, with_year = TRUE), 0, 4)),
          cy = year(arrest_date),
-         source = "UWCHR")
+         source = "All arrests (UWCHR)")
 
 rm(uwchr)
 
@@ -193,7 +194,7 @@ uwchr_sea_per_fy_quarter <- uwchr_sea %>%
   filter(fy_quarter != "2023.2")
   
 i213s_per_fy_quarter <- df %>% 
-  mutate(source = "I-213") %>% 
+  mutate(source = "I-213s (UWCHR)") %>% 
    filter(month >= "2022-01-01") %>%
   count(fy_quarter, source)
 
@@ -202,7 +203,7 @@ ddp_sea_per_fy_quarter <- ddp_arrests_sea %>%
   count(fy_quarter) %>% 
   filter(fy_quarter != "2023.4",
          fy_quarter != "2026.1") %>% 
-  mutate(source = "DDP")
+  mutate(source = "All arrests (DDP)")
 
 dat <- rbind(i213s_per_fy_quarter, ddp_sea_per_fy_quarter, uwchr_sea_per_fy_quarter) %>% 
   mutate(fy_quarter = as.factor(as.character(fy_quarter)))
@@ -216,25 +217,23 @@ p1 <- dat %>%
   ggplot(aes(x = fy_quarter, y = n, fill = source)) +
   geom_col(position = position_dodge2(preserve = "single")) +
   scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in\nQ1 of FY 2026",
+  labs(title = "Historic increase in ICE apprehensions in\nQ4 of CY 2026",
        subtitle = "Seattle Area of Responsibility")
 
 p1
 
 p2 <- dat %>% 
   mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
-         # type = case_when(source == "I-213" ~ 1,
-         #                  TRUE ~ 2)
          ) %>% 
-  ggplot(aes(x = fy_quarter, y = n, color = source, group = source,
-             # linetype = as.factor(type)
-             ),
-         )+
-  ylim(0, NA) +
+  ggplot(aes(x = fy_quarter, y = n, color=source, group = source)) +
   geom_line() +
+  ylab("") +
+  ylim(0, NA) +
+  xlab("Fiscal Quarter") +
   scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in\nQ1 of FY 2026",
-       subtitle = "Seattle Area of Responsibility")
+  labs(title = "Historic increase in ICE apprehensions in Q1 of FY2026",
+       subtitle = "Seattle Area of Responsibility",
+       color = "Data source")
 
 p2
 
@@ -328,20 +327,29 @@ p1 <- i213s_per_fy_quarter_state_pct_change %>%
 
 p1
 
-p1 <- i213s_per_fy_quarter_state_pct_change %>% 
+p1.1 <- i213s_per_fy_quarter_state_pct_change %>% 
+  ggplot(aes(x = fy_quarter, y = n, fill = state)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "I-213 arrests per FY quarter")
+
+p1.1
+
+
+p2 <- i213s_per_fy_quarter_state_pct_change %>% 
   ggplot(aes(x = fy_quarter, y = pct_change, fill = state)) +
   geom_col(position = position_dodge2(preserve = "single")) +
   scale_x_discrete(breaks = every_nth(n = 2)) +
   labs(title = "% change I-213 arrests per FY quarter")
 
-p1
+p2
 
-p2 <- i213s_per_cy_pct_change_state %>% 
+p3 <- i213s_per_cy_pct_change_state %>% 
   ggplot(aes(x = cy, y = pct_change, fill = state)) +
   geom_col(position = position_dodge2(preserve = "single")) +
   labs(title = "% change I-213 arrests per CY")
 
-p2
+p3
   
 ```
 
@@ -386,7 +394,7 @@ p2
 ```{r county_pct_change_wa}
 
 i213s_per_fy_quarter_county_pct_change <- df %>% 
-  filter(apprehension_date >= "2024-01-01",
+  filter(apprehension_date >= "2024-10-01",
          state %in% c("WA", "OR")
          ) %>% 
   count(fy_quarter, county, state) %>% 
@@ -399,19 +407,39 @@ p1 <- i213s_per_fy_quarter_county_pct_change %>%
   filter(state == "WA") %>% 
   ggplot(aes(x = fy_quarter, y = n, fill = county)) +
   geom_col(position = "stack") +
-  scale_x_discrete(breaks = every_nth(n = 2)) +
+  # scale_x_discrete(breaks = every_nth(n = 2)) +
   labs(title = "I-213 arrests per FY quarter by county")
 
 ggplotly(p1)
+
+p1.1 <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(state == "WA") %>% 
+  ggplot(aes(x = fy_quarter, y = n)) +
+  geom_col(position = "stack") +
+  # scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "I-213 arrests per FY quarter by county") +
+  facet_wrap(~county)
+
+p1.1
 
 p2 <- i213s_per_fy_quarter_county_pct_change %>% 
   filter(state == 'WA') %>% 
   ggplot(aes(x = fy_quarter, y = pct_change, fill = county)) +
   geom_col(position = position_dodge2(preserve = "single")) +
-  scale_x_discrete(breaks = every_nth(n = 2)) +
+  # scale_x_discrete(breaks = every_nth(n = 2)) +
   labs(title = "% change I-213 arrests per FY quarter by county")
 
 ggplotly(p2)
+
+p2.2 <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(state == "WA") %>% 
+  ggplot(aes(x = fy_quarter, y = pct_change)) +
+  geom_col(position = "stack") +
+  scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "% change I-213 arrests per FY quarter by county") +
+  facet_wrap(~county)
+
+p2.2
 
 ```
 
@@ -426,6 +454,16 @@ p1 <- i213s_per_fy_quarter_county_pct_change %>%
 
 ggplotly(p1)
 
+p1.1 <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(state == "OR") %>% 
+  ggplot(aes(x = fy_quarter, y = n, fill = county)) +
+  geom_col() +
+  scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "I-213 arrests per FY quarter by county") +
+  facet_wrap(~county)
+
+p1.1
+
 p2 <- i213s_per_fy_quarter_county_pct_change %>% 
   filter(state == 'OR') %>% 
   ggplot(aes(x = fy_quarter, y = pct_change, fill = county)) +
@@ -435,6 +473,78 @@ p2 <- i213s_per_fy_quarter_county_pct_change %>%
 
 ggplotly(p2)
 
+p3 <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(state == 'OR') %>% 
+  ggplot(aes(x = fy_quarter, y = pct_change, fill = county)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  facet_wrap(~county)
+
+p3
+
+```
+
+```{r}
+
+poo_i213s_per_fy_quarter_county_pct_change <- df %>% 
+  filter(apprehension_date >= "2024-10-01",
+         state %in% c("WA", "OR"),
+         site_code == "POO"
+         ) %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  count(fy_quarter, county_state) %>% 
+  mutate(fy_quarter = factor(fy_quarter)) %>% 
+  complete(fy_quarter, county_state, fill=list(n=0)) %>% 
+  group_by(county_state) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 ) %>% 
+  arrange(county_state, fy_quarter)
+
+top_counties <- poo_i213s_per_fy_quarter_county_pct_change %>% 
+  filter(fy_quarter == "2026.1") %>% 
+  arrange(desc(n))
+
+p1 <- poo_i213s_per_fy_quarter_county_pct_change %>% 
+  filter(county_state %in% head(top_counties$county_state, 9),
+         fy_quarter != "2025.2") %>% 
+  ggplot(aes(x = fy_quarter, y = n)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  facet_wrap(~county_state) +
+  labs(title = "Arrests by Portland ICE field office increase across OR, WA")
+
+p1
+
+```
+
+```{r}
+
+i213s_per_fy_quarter_county_pct_change <- df %>% 
+  filter(apprehension_date >= "2024-10-01",
+         state %in% c("WA", "OR")
+         ) %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  count(fy_quarter, county_state) %>% 
+  mutate(fy_quarter = factor(fy_quarter)) %>% 
+  complete(fy_quarter, county_state, fill=list(n=0)) %>% 
+  group_by(county_state) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 ) %>% 
+  arrange(county_state, fy_quarter)
+
+top_counties <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(fy_quarter == "2026.1") %>% 
+  arrange(desc(n))
+
+p1 <- i213s_per_fy_quarter_county_pct_change %>% 
+  filter(county_state %in% head(top_counties$county_state, 9),
+         fy_quarter != "2025.2") %>% 
+  ggplot(aes(x = fy_quarter, y = n)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  facet_wrap(~county_state) +
+  labs(title = "Arrests increase across OR, WA during 2025",
+       subtitle = "Top counties by total arrests during Oct.-Dec. 2025")
+
+p1
+
 ```
 
 
@@ -443,35 +553,30 @@ ggplotly(p2)
 ```{r}
 
 top_method <- df %>% 
-  filter(area_of_responsibility_code == "SEA") %>% 
+  filter(area_of_responsibility_code == "SEA",
+         apprehension_date > "2024-12-31") %>% 
   count(apprehension_method_descr) %>% 
   arrange(desc(n))
   
 p1 <- df %>% 
   filter(area_of_responsibility_code == "SEA",
-         apprehension_date > "2024-12-31") %>%
-  mutate(week = floor_date(apprehension_date, unit="week", week_start = "Monday"),
-         apprehension_method_descr = case_when(apprehension_method_descr %in% head(top_method$apprehension_method_descr, 5) ~ apprehension_method_descr,
+         apprehension_date > "2024-12-31",
+         state %in% c("WA", "OR")) %>%
+  mutate(apprehension_method_descr = case_when(
+    str_detect(apprehension_method_descr, "CAP") ~ "Custodial Arrest",
+    apprehension_method_descr == "Other efforts" ~ "All others",
+    apprehension_method_descr == "Located" ~ "Non-Custodial Arrest",
+    apprehension_method_descr == "Non-Custodial Arrest" ~ "Non-Custodial Arrest",
+    apprehension_method_descr == "Custodial Arrest" ~ "Custodial Arrest",
                                                TRUE ~ "All others")) %>% 
-  count(week, apprehension_method_descr) %>% 
-  ggplot(aes(x = week, y = n, color = apprehension_method_descr)) +
-  geom_line()
+  count(month, apprehension_method_descr) %>% 
+  ggplot(aes(x = month, y = n, fill = apprehension_method_descr)) +
+  geom_col() +
+  labs(title = "Enforcement surge in 2025 driven by community arrests",
+       fill = "Apprehension method")
 
 p1
 
-p2 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date > "2024-12-31",
-         state %in% c("WA", "OR")) %>%
-  mutate(week = floor_date(apprehension_date, unit="week", week_start = "Monday"),
-         apprehension_method_descr = case_when(apprehension_method_descr %in% head(top_method$apprehension_method_descr, 5) ~ apprehension_method_descr,
-                                               TRUE ~ "All others")) %>% 
-  count(week, state, apprehension_method_descr) %>% 
-  ggplot(aes(x = week, y = n, color = apprehension_method_descr)) +
-  geom_line() +
-  facet_wrap(~state)
-
-p2
 
 ```
 
@@ -534,14 +639,19 @@ dat <- df %>%
   mutate(year = year(apprehension_date),
          citizenship_country_descr = case_when(citizenship_country_descr %in% chnv ~ citizenship_country_descr,
                                              TRUE ~ "ALL OTHERS")) %>% 
-  count(citizenship_country_descr, year, state)
+  count(citizenship_country_descr, year)
   
 p3 <- dat %>%
   ggplot(aes(x = year, y = n, fill = citizenship_country_descr)) +
-  geom_col(position="fill") +
-  facet_wrap(~state)
+  geom_col(position="fill") 
 
 p3
+
+p3.1 <- dat %>%
+  ggplot(aes(x = year, y = n, fill = citizenship_country_descr)) +
+  geom_col() 
+
+p3.1
 
 ```
 
@@ -572,12 +682,11 @@ dat <- df %>%
   mutate(year = year(apprehension_date),
          citizenship_country_descr = case_when(citizenship_country_descr %in% head(country_top$citizenship_country_descr, 10) ~ citizenship_country_descr,
                                              TRUE ~ "ALL OTHERS")) %>% 
-  count(citizenship_country_descr, state, year)
+  count(citizenship_country_descr, year)
   
 p1 <- dat %>%
   ggplot(aes(x = year, y = n, fill = citizenship_country_descr)) +
-  geom_col() +
-  facet_wrap(~state)
+  geom_col()
 
 p1
 

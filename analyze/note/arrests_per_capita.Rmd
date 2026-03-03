@@ -218,3 +218,24 @@ p2 <- quarterly_arrests_pc %>%
 ggplotly(p2)
 
 ```
+
+```{r}
+
+dat <- quarterly_arrests_pc %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  filter(cy_quarter == "2025.4") %>% 
+  arrange(desc(arrests_pc))
+
+p1 <- quarterly_arrests_pc %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  filter(cy == 2025,
+         county_state %in% head(dat$county_state, 9)) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc)) +
+  geom_col() +
+  facet_wrap(~county_state) +
+  labs(title = "High rates of immigration arrests per capita",
+       subtitle = "Top counties by arrests per capita, Q4 2025")
+
+p1  
+
+```
