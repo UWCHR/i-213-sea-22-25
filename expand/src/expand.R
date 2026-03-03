@@ -4,7 +4,7 @@ p_load(here, tidyverse, tidylog, lubridate, jsonlite)
 
 in_file <- 'sea-i213s-2026-02-13.csv.gz'
 
-df <- read_delim(here('clean', 'input', in_file), delim='|')
+df <- read_delim(here('expand', 'input', in_file), delim='|')
 
 df$row_id <- 1:nrow(df)
 
