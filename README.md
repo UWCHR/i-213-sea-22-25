@@ -2,6 +2,8 @@
 
 Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. All results preliminary.
 
+Analysis-ready version of dataset is located at: `geocode/output/sea-i213s-2026-02-13-geocoded.csv`
+
 Task order:
 - `import`
 - `clean`
@@ -9,7 +11,7 @@ Task order:
 - `geocode`
 - `analyze`
 
-Note that `geocode/src/geocode.R` requires Google Maps API ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once.
+Note that `geocode/src/geocode.R` requires Google Maps API ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
 Sensitive or fully redacted columns dropped in separate repository:
 
