@@ -1,0 +1,331 @@
+---
+title: "ICE I-213 analysis 2022-2025"
+author: "UWCHR"
+date: "2026-02-18"
+output:
+    html_document:
+        html_preview: true
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        code_folding: hide
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=TRUE}
+
+options(scipen = 1000000)
+
+library(pacman)
+
+p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, ggmap, tidygeocoder, sf, rnaturalearth)
+
+```
+
+
+```{r load_data, message=FALSE, warning=FALSE, include=TRUE}
+
+file <- "sea-i213s-2026-02-13-geocoded.csv"
+
+df <- read_delim(here('analyze', 'input', file), delim='|') %>% 
+  janitor::clean_names() %>% 
+  mutate(apprehension_date = as.Date(apprehension_date),
+         entry_date = as.Date(entry_date),
+         occupation_text = str_to_upper(occupation_text),
+         app_ldmk_other_comment_text = str_to_upper(app_ldmk_other_comment_text)) %>% 
+  mutate(week = floor_date(apprehension_date, "week", week_start = "Monday"),
+         month = floor_date(apprehension_date, "month"),
+         cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
+         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
+         fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),
+         cy = year (apprehension_date),
+         days_since_entry = difftime(apprehension_date, entry_date, units="days"),
+         years_since_entry = as.numeric(difftime(apprehension_date, entry_date, units="days"))/365.4,
+         age_group = cut(age,
+                           breaks = c(0, 18, 25, 40, 60, Inf),
+                           right = FALSE))
+
+```
+
+```{r gender}
+
+dat <- df %>% 
+  filter(apprehension_date >= "2021-10-01") %>% 
+  count(gender_code, month)
+  
+p1 <- dat %>%
+  ggplot(aes(x = month, y = n, fill = gender_code)) +
+  geom_col(position="fill")
+
+p1
+
+```
+
+```{r age_sex_per_year}
+
+pop_data <- df %>%
+  filter(apprehension_date >= "2022-01-01") %>% 
+    filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
+    count(gender_code, age_group, cy) %>%
+    mutate(prop = n / sum(n)) %>%
+    ungroup() %>% 
+    mutate(n = case_when(gender_code == "F" ~ -n,
+           TRUE ~ n),
+           prop = case_when(gender_code == "F" ~ -prop,
+           TRUE ~ prop))
+
+pop_prop_range <- range(pop_data$prop)
+pop_prop_range_breaks <- pretty(pop_prop_range, 6)
+
+p1 <- pop_data %>% 
+    ggplot(aes(x = prop, y = age_group, fill=gender_code)) +
+    geom_col() +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(breaks = pop_prop_range_breaks,
+                       labels = function(x) scales::percent(abs(x))) +
+  labs(title = "") +
+  facet_wrap(~cy)
+
+p1
+
+```
+
+```{r age_sex_by_cy_quarter_2025}
+
+pop_data <- df %>%
+  filter(apprehension_date >= "2025-01-01",
+         state %in% c("WA", "OR")) %>% 
+    filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
+    count(gender_code, age_group, cy_quarter) %>%
+    mutate(prop = n / sum(n)) %>%
+    ungroup() %>% 
+    mutate(n = case_when(gender_code == "F" ~ -n,
+           TRUE ~ n),
+           prop = case_when(gender_code == "F" ~ -prop,
+           TRUE ~ prop))
+
+pop_prop_range <- range(pop_data$prop)
+pop_prop_range_breaks <- pretty(pop_prop_range, 6)
+
+p1 <- pop_data %>% 
+    ggplot(aes(x = prop, y = age_group, fill=gender_code)) +
+    geom_col() +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(breaks = pop_prop_range_breaks,
+                       labels = function(x) scales::percent(abs(x))) +
+  labs(title = "") +
+  facet_wrap(~cy_quarter)
+
+p1
+
+```
+
+```{r age_sex_by_state_2025}
+
+pop_data <- df %>%
+  filter(apprehension_date >= "2025-01-01",
+         state %in% c("WA", "OR")) %>% 
+    filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
+    count(gender_code, age_group, state) %>%
+    mutate(prop = n / sum(n)) %>%
+    ungroup() %>% 
+    mutate(n = case_when(gender_code == "F" ~ -n,
+           TRUE ~ n),
+           prop = case_when(gender_code == "F" ~ -prop,
+           TRUE ~ prop))
+
+pop_prop_range <- range(pop_data$prop)
+pop_prop_range_breaks <- pretty(pop_prop_range, 6)
+
+p1 <- pop_data %>% 
+    ggplot(aes(x = prop, y = age_group, fill=gender_code)) +
+    geom_col() +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(breaks = pop_prop_range_breaks,
+                       labels = function(x) scales::percent(abs(x))) +
+  labs(title = "") +
+  facet_wrap(~state)
+
+p1
+
+```
+
+```{r country}
+
+country_top <- df %>% 
+  count(citizenship_country_descr) %>% 
+  arrange(desc(n))
+
+dat <- df %>% 
+  filter(
+    apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>% 
+  mutate(month = floor_date(apprehension_date, unit="months"),
+         citizenship_country_descr = case_when(citizenship_country_descr %in% head(country_top$citizenship_country_descr, 10) ~ citizenship_country_descr,
+                                             TRUE ~ "ALL OTHERS")) %>% 
+  count(citizenship_country_descr, cy, state)
+  
+p1 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col() +
+  facet_wrap(~state)
+
+p1
+
+p2 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col(position="fill") +
+  facet_wrap(~state)
+
+p2
+
+```
+
+```{r chnv}
+
+chnv <- c("CUBA", "HAITI", "NICARAGUA", "VENEZUELA")
+
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>% 
+  mutate(month = floor_date(apprehension_date, unit="months"),
+         citizenship_country_descr = case_when(citizenship_country_descr %in% chnv ~ citizenship_country_descr,
+                                             TRUE ~ "ALL OTHERS")) %>% 
+  count(citizenship_country_descr, month)
+  
+p2 <- dat %>%
+  ggplot(aes(x = month, y = n, fill = citizenship_country_descr)) +
+  geom_col(position="fill")
+
+p2
+
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>% 
+  mutate(year = year(apprehension_date),
+         citizenship_country_descr = case_when(citizenship_country_descr %in% chnv ~ citizenship_country_descr,
+                                             TRUE ~ "ALL OTHERS")) %>% 
+  count(citizenship_country_descr, year)
+  
+p3 <- dat %>%
+  ggplot(aes(x = year, y = n, fill = citizenship_country_descr)) +
+  geom_col(position="fill") 
+
+p3
+
+p3.1 <- dat %>%
+  ggplot(aes(x = year, y = n, fill = citizenship_country_descr)) +
+  geom_col() 
+
+p3.1
+
+```
+
+```{r country_pct_change_annual}
+
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>% 
+  count(cy, citizenship_country_descr) %>% 
+  group_by(citizenship_country_descr) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 )
+
+temp <- dat %>% 
+  filter(n > 50)
+
+```
+
+```{r}
+
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01", 
+         state %in% c("WA", "OR")) %>% 
+  group_by(cy) %>% 
+  summarize(avg_years_since_entry = mean(years_since_entry, na.rm=TRUE))
+
+p1 <- dat %>% 
+  ggplot(aes(x = cy, y = avg_years_since_entry)) +
+  geom_col() +
+  ylim(0, NA) +
+  ylab("Years since entry") +
+  labs(title="Increasing average time since entry")
+
+p1
+
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01", 
+         state %in% c("WA", "OR")) %>% 
+  group_by(cy, state) %>% 
+  summarize(avg_years_since_entry = mean(years_since_entry, na.rm=TRUE))
+
+p2 <- dat %>% 
+  ggplot(aes(x = cy, y = avg_years_since_entry)) +
+  geom_col() +
+  ylim(0, NA) +
+  ylab("Years since entry") +
+  labs(title="Increasing average time since entry") + 
+  facet_wrap(~state)
+
+p2
+
+
+# p2 <- df %>% 
+#   filter(apprehension_date >= "2021-12-31") %>% 
+#   ggplot(aes(x = as.factor(fy_quarter), y = as.numeric(days_since_entry))) +
+#   geom_boxplot() +
+#   ylim(0, NA)
+
+p2
+
+```
+
+```{r}
+
+dat <- df %>% 
+  filter(month >= "2022-01-01") %>%
+  count(cy, any_usc)
+
+p1 <- dat %>% 
+  # mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q")) %>% 
+  ggplot(aes(x = cy, y = n, fill = any_usc)) +
+  geom_col() +
+  # scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "Increasing number of people with USC children arrested")
+
+p1
+
+p2 <- dat %>% 
+  ggplot(aes(x = cy, y = n, fill = any_usc)) +
+  geom_col(position = "fill")
+
+p2
+
+```
+
+```{r}
+
+dat <- df %>% 
+  filter(month >= "2022-01-01",
+         state %in% c("WA", "OR")
+         ) %>%
+  count(cy, any_usc, state)
+
+p1 <- dat %>% 
+  # mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q")) %>% 
+  ggplot(aes(x = cy, y = n, fill = any_usc)) +
+  geom_col() +
+  # scale_x_discrete(breaks = every_nth(n = 2)) +
+  labs(title = "Increasing number of people with USC children arrested") +
+  facet_wrap(~state)
+
+p1
+
+p2 <- dat %>% 
+  ggplot(aes(x = cy, y = n, fill = any_usc)) +
+  geom_col(position = "fill") +
+  facet_wrap(~state)
+
+p2
+
+```
+
