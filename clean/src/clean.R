@@ -15,7 +15,7 @@ df <- read_delim(here('clean', 'input', in_file), delim='|') |>
 # so we clean this first, and only clean `apprehension_landmark_descr` if missing.
 # Where only geographic marker is ICE sub-office, we fill in city/state value for office. 
 
-df <- df %>% 
+df_cleaned <- df %>% 
   mutate(
     app_ldmk_other_comment_text =
            str_replace_all(app_ldmk_other_comment_text, "\\(B\\)\\(6\\), \\(B\\)\\(7\\)\\(C\\)|UNKNOWN PLACE", NA_character_),
@@ -41,7 +41,8 @@ df <- df %>%
                 apprehension_landmark_descr == "CLACKAMAS COUNTY JAIL" & is.na(app_ldmk_other_comment_text) ~ "OREGON CITY, OR",
                 apprehension_landmark_descr == "SEATTLE FUG OPS" & is.na(app_ldmk_other_comment_text) ~ "SEATTLE, WA",
                 apprehension_landmark_descr == "MONROE WASHINGTON STATE REFORMATORY (WSR)" & is.na(app_ldmk_other_comment_text) ~ "MONROE, WA",
-                apprehension_landmark_descr == "NORTHWEST DETENTION CENTER DETAINED DOCKET" & is.na(app_ldmk_other_comment_text) ~ "TACOMA, WA"),
+                apprehension_landmark_descr == "NORTHWEST DETENTION CENTER DETAINED DOCKET" & is.na(app_ldmk_other_comment_text) ~ "TACOMA, WA",
+                TRUE ~ apprehension_landmark_descr),
      apprehension_landmark_descr =
       case_when(
                 str_detect(apprehension_landmark_descr, "POO") & is.na(app_ldmk_other_comment_text) ~ "PORTLAND, OR",
@@ -53,11 +54,12 @@ df <- df %>%
                 str_detect(apprehension_landmark_descr, "YAK") & is.na(app_ldmk_other_comment_text) ~ "YAKIMA, WA",
                 str_detect(apprehension_landmark_descr, "MED") & is.na(app_ldmk_other_comment_text) ~ "MEDFORD, OR",
                 str_detect(apprehension_landmark_descr, "EUG") & is.na(app_ldmk_other_comment_text) ~ "EUGENE, OR",
-                TRUE ~ apprehension_landmark_descr))
+                TRUE ~ apprehension_landmark_descr)
+    )
 
 
 out_file <- 'sea-i213s-2026-02-13.csv.gz'
 
-write_delim(df, here('clean', 'output', out_file), delim='|', na='')
+write_delim(df_cleaned, here('clean', 'output', out_file), delim='|', na='')
 
 
