@@ -127,6 +127,35 @@ p3.1 <- df %>%
 
 p3.1
 
+p3.2 <- df %>% 
+  filter(area_of_responsibility_code == "SEA",
+         apprehension_date >= "2025-01-01",
+         state %in% c("WA", "OR")) %>%
+  count(month, state) %>% 
+  ggplot(aes(x = month, y = n, color = state)) +
+  geom_line() +
+  annotate(
+    'text',
+    x = as.Date("2025-05-01"),
+    y = 310,
+    label = 'Steady increase in arrests\nacross region during early 2025',
+    fontface = 'bold', 
+    size = 4.5
+  ) +
+  annotate(
+    'text',
+    x = as.Date("2025-07-01"),
+    y = 810,
+    label = 'Surge of arrests in Oregon\nduring Oct.-Dec.',
+    fontface = 'bold', 
+    size = 4.5
+  ) +
+  labs(title = "Immigration arrests in Oregon outpace Washington in Oct.-Dec. 2025",
+       # subtitle = "Seattle AOR"
+       )
+
+p3.2
+
 ```
 
 ```{r}
