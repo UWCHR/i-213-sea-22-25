@@ -28,6 +28,8 @@ file <- "sea-i213s-2026-02-13-geocoded.csv"
 
 df <- read_delim(here('analyze', 'input', file), delim='|')
 
+# Source for census estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+
 pop_wa <- read_delim(here::here("analyze", "input", "co-est2024-pop-53.csv"), delim=',', skip = 3, n_max = 40)
 
 pop_or <- read_delim(here::here("analyze", "input", "co-est2024-pop-41.csv"), delim=',', skip = 3, n_max = 37)
