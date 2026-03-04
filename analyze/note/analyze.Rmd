@@ -517,28 +517,31 @@ p1
 
 ```{r}
 
-i213s_per_fy_quarter_county_pct_change <- df %>% 
-  filter(apprehension_date >= "2024-10-01",
+i213s_per_cy_quarter_county_pct_change <- df %>% 
+  filter(apprehension_date >= "2025-01-01",
          state %in% c("WA", "OR")
          ) %>% 
   mutate(county_state = paste(county, state, sep=", ")) %>% 
-  count(fy_quarter, county_state) %>% 
-  mutate(fy_quarter = factor(fy_quarter)) %>% 
-  complete(fy_quarter, county_state, fill=list(n=0)) %>% 
+  count(cy_quarter, county_state) %>% 
+  mutate(cy_quarter = factor(cy_quarter)) %>% 
+  complete(cy_quarter, county_state, fill=list(n=0)) %>% 
   group_by(county_state) %>% 
   mutate(prev_n = lag(n),
          pct_change = ((n - prev_n)/prev_n) * 100 ) %>% 
-  arrange(county_state, fy_quarter)
+  arrange(county_state, cy_quarter)
 
-top_counties <- i213s_per_fy_quarter_county_pct_change %>% 
-  filter(fy_quarter == "2026.1") %>% 
+top_counties <- i213s_per_cy_quarter_county_pct_change %>% 
+  filter(cy_quarter == "2025.4") %>% 
   arrange(desc(n))
 
-p1 <- i213s_per_fy_quarter_county_pct_change %>% 
+p1 <- i213s_per_cy_quarter_county_pct_change %>% 
   filter(county_state %in% head(top_counties$county_state, 9),
-         fy_quarter != "2025.2") %>% 
-  ggplot(aes(x = fy_quarter, y = n)) +
+         ) %>% 
+  mutate(cy_quarter = str_replace(cy_quarter, "\\.", "Q")) %>% 
+  ggplot(aes(x = cy_quarter, y = n)) +
   geom_col(position = position_dodge2(preserve = "single")) +
+  ylab("n") +
+  xlab("Calendar quarter") +
   facet_wrap(~county_state) +
   labs(title = "Arrests increase across OR, WA during 2025",
        subtitle = "Top counties by total arrests during Oct.-Dec. 2025")

@@ -66,6 +66,7 @@ pop_data <- df %>%
   filter(apprehension_date >= "2022-01-01") %>% 
     filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
     count(gender_code, age_group, cy) %>%
+  group_by(cy) %>% 
     mutate(prop = n / sum(n)) %>%
     ungroup() %>% 
     mutate(n = case_when(gender_code == "F" ~ -n,
@@ -83,6 +84,10 @@ p1 <- pop_data %>%
     scale_x_continuous(breaks = pop_prop_range_breaks,
                        labels = function(x) scales::percent(abs(x))) +
   labs(title = "") +
+  ylab("Age group") +
+  xlab("Proportion") +
+  guides(fill = guide_legend("Sex")) +
+  labs(title = "Changing age/sex demographics") +
   facet_wrap(~cy)
 
 p1
@@ -96,12 +101,14 @@ pop_data <- df %>%
          state %in% c("WA", "OR")) %>% 
     filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
     count(gender_code, age_group, cy_quarter) %>%
+    group_by(cy_quarter) %>% 
     mutate(prop = n / sum(n)) %>%
     ungroup() %>% 
     mutate(n = case_when(gender_code == "F" ~ -n,
            TRUE ~ n),
            prop = case_when(gender_code == "F" ~ -prop,
-           TRUE ~ prop))
+           TRUE ~ prop)) %>% 
+  arrange(cy_quarter, gender_code, age_group)
 
 pop_prop_range <- range(pop_data$prop)
 pop_prop_range_breaks <- pretty(pop_prop_range, 6)
@@ -126,6 +133,7 @@ pop_data <- df %>%
          state %in% c("WA", "OR")) %>% 
     filter(!is.na(age), !is.na(gender_code), gender_code %in% c("M", "F")) %>%
     count(gender_code, age_group, state) %>%
+  group_by(state) %>% 
     mutate(prop = n / sum(n)) %>%
     ungroup() %>% 
     mutate(n = case_when(gender_code == "F" ~ -n,
@@ -149,7 +157,35 @@ p1
 
 ```
 
-```{r country}
+```{r country_by_state}
+
+country_top <- df %>% 
+  count(citizenship_country_descr) %>% 
+  arrange(desc(n))
+
+dat <- df %>% 
+  filter(
+    apprehension_date >= "2022-01-01",
+         state %in% c("WA", "OR")) %>% 
+  mutate(month = floor_date(apprehension_date, unit="months"),
+         citizenship_country_descr = case_when(citizenship_country_descr %in% head(country_top$citizenship_country_descr, 10) ~ citizenship_country_descr,
+                                             TRUE ~ "ALL OTHERS")) %>% 
+  count(citizenship_country_descr, cy)
+  
+p1 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col()
+p1
+
+p2 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col(position="fill")
+
+p2
+
+```
+
+```{r country_by_state}
 
 country_top <- df %>% 
   count(citizenship_country_descr) %>% 
@@ -245,8 +281,9 @@ dat <- df %>%
 
 p1 <- dat %>% 
   ggplot(aes(x = cy, y = avg_years_since_entry)) +
-  geom_col() +
-  ylim(0, NA) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 8) +
   ylab("Years since entry") +
   labs(title="Increasing average time since entry")
 
@@ -260,7 +297,8 @@ dat <- df %>%
 
 p2 <- dat %>% 
   ggplot(aes(x = cy, y = avg_years_since_entry)) +
-  geom_col() +
+  geom_line() +
+  geom_point() +
   ylim(0, NA) +
   ylab("Years since entry") +
   labs(title="Increasing average time since entry") + 
