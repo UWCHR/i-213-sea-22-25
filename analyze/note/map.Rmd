@@ -442,8 +442,6 @@ counties$area <- as.numeric(st_area(counties))
 counties <- left_join(counties, quarterly_arrests_pc, by = c("county" = "county_lower", "state")) %>% 
   drop_na()
 
-pnw_coords <- coord_sf(xlim = c(-125, -116), ylim = c(41.5, 49.5), expand = FALSE, crs = 4326)
-
 st_crs(wa) <- 4326
 st_crs(wa$geom) <- 4326
 # st_crs(sites) <- 4326
@@ -453,7 +451,7 @@ plot_county_pc <- function(data_to_plot) {ggplot(data = wa) +
   geom_sf() +
   geom_sf(data = wa, fill = NA) + 
   geom_sf(data = data_to_plot, aes(fill = arrests_pc)) + 
-  scale_fill_viridis_c(limits = c(0, 150)) +
+  scale_fill_viridis_c(limits = c(0, 75)) +
   pnw_coords +
   theme_minimal() +
   theme(axis.title.x=element_blank(),
@@ -550,7 +548,7 @@ plot_sites <- function(data_to_plot) {ggplot(data = wa) +
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         panel.grid = element_blank()) +
-  scale_size_continuous(limits = c(1, 1100)) +
+  scale_size_continuous(limits = c(1, 600)) +
   labs(title = 'ICE arrests per quarter',
        subtitle = "per I-213 forms",
        caption = "I-213 data through Dec. 2025")}
@@ -630,7 +628,7 @@ plot_sites <- function(data_to_plot) {ggplot(data = wa) +
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         panel.grid = element_blank()) +
-  scale_size_continuous(limits = c(1, 1100)) +
+  scale_size_continuous(limits = c(1, 600)) +
   labs(title = 'ICE arrests per quarter',
        subtitle = "per I-213 forms",
        caption = "I-213 data through Dec. 2025")}
@@ -693,7 +691,7 @@ plot_sites <- function(data_to_plot) {ggplot(data = wa) +
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         panel.grid = element_blank()) +
-  scale_size_continuous(limits = c(1, 1100)) +
+  scale_size_continuous(limits = c(1, 600)) +
   labs(title = 'ICE arrests per quarter',
        subtitle = "per I-213 forms",
        caption = "I-213 data through Dec. 2025")}
@@ -741,8 +739,6 @@ counties <- left_join(counties, dat, by = c("county" = "county_lower", "state"))
 # counties <- counties %>%
 #   filter(apprehension_year == 2025)
 
-pnw_coords <- coord_sf(xlim = c(-125, -116), ylim = c(41.5, 49.5), expand = FALSE, crs = 4326)
-
 st_crs(wa) <- 4326
 st_crs(wa$geom) <- 4326
 # st_crs(sites) <- 4326
@@ -752,7 +748,7 @@ plot_county_pc <- function(data_to_plot) {ggplot(data = wa) +
   geom_sf() +
   geom_sf(data = wa, fill = NA) + 
   geom_sf(data = data_to_plot, aes(fill = n)) + 
-  scale_fill_viridis_c(limits = c(0, 1500)) +
+  scale_fill_viridis_c(limits = c(0, 600)) +
   pnw_coords +
   theme_minimal() +
   theme(axis.title.x=element_blank(),

@@ -28,26 +28,12 @@ file <- "sea-i213s-2026-02-13-geocoded.csv"
 
 df <- read_delim(here('analyze', 'input', file), delim='|')
 
-ddp_arrests <- arrow::read_feather(
-  "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.feather"
-)
+```
 
-ddp_arrests_sea <- ddp_arrests %>% 
-  mutate(apprehension_date = as.Date(apprehension_date),
-         final_order_date = as.Date(final_order_date)) |>
-  mutate(apprehension_method = fct(apprehension_method)) |>
-  mutate(criminality = apprehension_criminality == "1 Convicted Criminal") |>
-  mutate(n_dupe = row_number(), .by = c("apprehension_date", "apprehension_method", "apprehension_criminality", "unique_identifier")) |>
-  filter(is.na(unique_identifier) | n_dupe == 1) |>
-  mutate(week = floor_date(apprehension_date, "week", week_start = "Monday"),
-         month = floor_date(apprehension_date, "month"),
-         cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
-         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
-         fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),,
-         cy = year(apprehension_date)) %>% 
-  filter(apprehension_aor == "Seattle Area of Responsibility")
+```{r apprehension_date}
 
-rm(ddp_arrests)
+# Less than 1% of records have apprehension date prior to 2022, we can exclude
+nrow(df[df$apprehension_date < "2022-01-01",]) / nrow(df) *100
 
 ```
 
@@ -145,117 +131,24 @@ p3.2
 
 ```
 
-```{r}
+Tacoma has largest share of out-of-state I-213s, which makes sense if these represent transfers from elsewhere processed at NWDC. Also out-of-state I-213s declining over time which tracks border enforcement trends.
 
-dat1 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         month >= "2022-01-01") %>% 
-  count(month) %>% 
-  mutate(source = "SEA I-213s")
+```{r state_by_office}
 
-dat2 <- ddp_arrests_sea %>% 
-  filter(apprehension_aor == "Seattle Area of Responsibility",
-         month >= "2022-01-01") %>% 
-  count(month) %>% 
-  mutate(source = "SEA arrests per DDP")
+dat <- df %>% 
+  filter(apprehension_date >= "2022-01-01") %>% 
+  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
+                         TRUE ~ "ALL OTHERS")) %>% 
+  count(cy, site_code, state)
 
-dat <- rbind(dat1, dat2)
-
-p1 <- dat %>% 
-  ggplot(aes(x = month, y = n, color = source)) +
-  geom_line() +
-  labs(title = "I-213s versus ICE arrests")
+p1 <- dat %>%
+  ggplot(aes(y = site_code, x = n, fill = state)) +
+  geom_col(position="fill") +
+  facet_wrap(~cy)
 
 p1
 
-# Comparison of DDP arrests to I-213s per month for SEA AOR
-
-dat_wide <- pivot_wider(dat, id_cols = month, names_from = source, values_from = n) %>% 
-  janitor::clean_names() %>% 
-  drop_na() %>% 
-  filter(month < "2025-10-01") %>% 
-  mutate(diff = sea_arrests_per_ddp - sea_i_213s,
-         pct = sea_i_213s / sea_arrests_per_ddp * 100)
-
 ```
-
-```{r}
-
-# uwchr <- read_delim(here::here('analyze', 'input', 'ice_arrests_fy12-23ytd.csv.gz'), delim='|')
-
-url <- "https://drive.usercontent.google.com/download?id=1XAOS7t3ijImVXQ9G7l6xdCr_rBh8i4cz&export=download&authuser=0&confirm=t&uuid=0c4a4b74-5e5f-4f00-8c8a-eb00a56708f9&at=APcXIO3JvUiU3ilszJZ3EAuIE01Y:1772065031530"
-f <- tempfile(fileext = ".csv.gz")
-download.file(url, f, mode = "wb")
-
-uwchr <- read.delim(f, sep='|')
-
-uwchr_sea <- uwchr %>% 
-  filter(area_of_responsibility == "Seattle Area of Responsibility") %>%
-  mutate(arrest_date = mdy(arrest_date),
-         month = floor_date(arrest_date, unit="month"),
-         cy_quarter = as.factor(quarter(arrest_date, fiscal_start = 1, with_year = TRUE)),
-         fy_quarter = as.factor(quarter(arrest_date, fiscal_start = 10, with_year = TRUE)),
-         fy = as.numeric(substr(quarter(arrest_date, fiscal_start = 10, with_year = TRUE), 0, 4)),
-         cy = year(arrest_date),
-         source = "All arrests (UWCHR)")
-
-rm(uwchr)
-
-```
-
-```{r}
-  
-uwchr_sea_per_fy_quarter <- uwchr_sea %>% 
-  count(fy_quarter, source) %>% 
-  filter(fy_quarter != "2023.2")
-  
-i213s_per_fy_quarter <- df %>% 
-  mutate(source = "I-213s (UWCHR)") %>% 
-   filter(month >= "2022-01-01") %>%
-  count(fy_quarter, source)
-
-ddp_sea_per_fy_quarter <- ddp_arrests_sea %>% 
-  filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
-  count(fy_quarter) %>% 
-  filter(fy_quarter != "2023.4",
-         fy_quarter != "2026.1") %>% 
-  mutate(source = "All arrests (DDP)")
-
-dat <- rbind(i213s_per_fy_quarter, ddp_sea_per_fy_quarter, uwchr_sea_per_fy_quarter) %>% 
-  mutate(fy_quarter = as.factor(as.character(fy_quarter)))
-
-every_nth = function(n) {
-  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
-}
-
-p1 <- dat %>% 
-  mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q")) %>% 
-  ggplot(aes(x = fy_quarter, y = n, fill = source)) +
-  geom_col(position = position_dodge2(preserve = "single")) +
-  scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in\nQ4 of CY 2026",
-       subtitle = "Seattle Area of Responsibility")
-
-p1
-
-p2 <- dat %>% 
-  mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
-         ) %>% 
-  ggplot(aes(x = fy_quarter, y = n, color=source, group = source)) +
-  geom_line() +
-  ylab("") +
-  ylim(0, NA) +
-  xlab("Fiscal Quarter") +
-  scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in Q1 of FY2026",
-       subtitle = "Seattle Area of Responsibility",
-       color = "Data source")
-
-p2
-
-
-```
-
 
 ```{r pct_increase}
 
