@@ -7,8 +7,19 @@ in_file <- 'sea-i213s-2026-02-13.csv.gz'
 df <- read_delim(here('clean', 'input', in_file), delim='|') |>
 	mutate(apprehension_date = as.Date(apprehension_date),
          entry_date = as.Date(entry_date),
-         week = floor_date(apprehension_date, "week", week_start = "Monday")
-         )
+         occupation_text = str_to_upper(occupation_text),
+         app_ldmk_other_comment_text = str_to_upper(app_ldmk_other_comment_text),
+         week = floor_date(apprehension_date, "week", week_start = "Monday"),
+         month = floor_date(apprehension_date, "month"),
+         cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
+         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
+         fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),
+         cy = year (apprehension_date),
+         days_since_entry = difftime(apprehension_date, entry_date, units="days"),
+         years_since_entry = as.numeric(difftime(apprehension_date, entry_date, units="days"))/365.4,
+         age_group = cut(age,
+                           breaks = c(0, 18, 25, 40, 60, Inf),
+                           right = FALSE))
 
 # We ultimately want to geocode records based on coalesced `app_ldmk_other_comment_text`
 # and `apprehension_landmark_descr` fields. `app_ldmk_other_comment_text` is typically more precise,
