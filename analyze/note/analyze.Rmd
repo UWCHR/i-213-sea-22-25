@@ -26,20 +26,7 @@ p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, g
 
 file <- "sea-i213s-2026-02-13-geocoded.csv"
 
-df <- read_delim(here('analyze', 'input', file), delim='|') %>% 
-  janitor::clean_names() %>% 
-  mutate(apprehension_date = as.Date(apprehension_date),
-         entry_date = as.Date(entry_date),
-         occupation_text = str_to_upper(occupation_text),
-         app_ldmk_other_comment_text = str_to_upper(app_ldmk_other_comment_text)) %>% 
-  mutate(week = floor_date(apprehension_date, "week", week_start = "Monday"),
-         month = floor_date(apprehension_date, "month"),
-         cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
-         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
-         fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),
-         cy = year (apprehension_date),
-         days_since_entry = difftime(apprehension_date, entry_date, units="days"),
-         years_since_entry = as.numeric(difftime(apprehension_date, entry_date, units="days"))/365.4)
+df <- read_delim(here('analyze', 'input', file), delim='|')
 
 ddp_arrests <- arrow::read_feather(
   "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.feather"
