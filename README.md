@@ -13,6 +13,8 @@ Task order:
 
 Note that `geocode/src/geocode.R` requires Google Maps API credentials ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
+U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+
 Sensitive or fully redacted columns dropped in separate repository:
 
 ```
