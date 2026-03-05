@@ -48,6 +48,7 @@ df <- read_delim(here('analyze', 'input', file), delim='|') %>%
          fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
          fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),
          cy = year(apprehension_date),
+         trump = apprehension_date >= "2025-01-20",
          days_since_entry = difftime(apprehension_date, entry_date, units="days"),
          years_since_entry = as.numeric(difftime(apprehension_date, entry_date, units="days"))/365.4,
          age_group = cut(age,

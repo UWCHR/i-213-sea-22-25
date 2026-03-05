@@ -578,6 +578,81 @@ counties <- counties %>%
 
 counties$area <- as.numeric(st_area(counties))
 
+dat <- df %>% 
+  filter(state %in% c("WA", "OR"),
+         apprehension_date >= "2022-01-01") %>% 
+  select(long, lat, site_code, cy) %>% 
+  na.omit()
+
+sites <- st_as_sf(dat, coords = c("long", "lat"),
+                   crs = 4326, agr = "constant") %>% 
+  count(geometry, cy, site_code) %>% 
+  arrange(cy, site_code, n)
+
+# wa_coords <- coord_sf(xlim = c(-125, -116.5), ylim = c(41.5, 49.5), expand = FALSE, crs = 4326)
+# 
+# st_crs(dat) <- 4326
+# st_crs(dat$geom) <- 4326
+st_crs(sites) <- 4326
+st_crs(sites$geometry) <- 4326
+
+plot_sites <- function(data_to_plot) {ggplot(data = wa) +
+  geom_sf() +
+  geom_sf(data = wa, fill = NA) + 
+  geom_sf(data = counties, fill = NA) + 
+  geom_sf(data = data_to_plot, shape = 21, color = "black", aes( fill = site_code, size = n), alpha=.7) +
+  # geom_sf(data = field_offices, color = "black") +
+  #   geom_label_repel(data = field_offices, aes(label = city, geometry = geometry),
+  #                  segment.color = 'black',
+  #                  min.segment.length = 0,
+  #                  segment.size = .5,,
+  #                  stat = "sf_coordinates",
+  #               force = 5) +
+  pnw_coords +
+  facet_wrap(~cy, nrow=1) +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid = element_blank()) +
+  scale_size_continuous(limits = c(1, 600)) +
+  labs(title = 'ICE arrests per year by field office',
+       subtitle = "per I-213 forms",
+       caption = "I-213 data through Dec. 2025")}
+
+p1 <- sites %>% 
+  filter(cy == 2025) %>% 
+  plot_sites()
+
+p1
+
+p2 <- sites %>% 
+  plot_sites()
+
+p2
+
+```
+
+```{r}
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+states <- st_as_sf(maps::map("state", crs = 4326, plot = FALSE, fill = TRUE))
+
+states <- cbind(states, st_coordinates(st_point_on_surface(states)))
+states$ID <-str_to_title(as.character(states$ID))
+
+counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
+
+counties <- counties %>%
+  separate(col = 'ID', into = c("state", "county"), sep = ",", remove = FALSE) %>%
+  filter(state %in% c('washington', 'oregon'))
+
+counties$area <- as.numeric(st_area(counties))
+
 sites <- df %>% 
   filter(state %in% c("WA", "OR"),
          apprehension_date >= "2025-01-01") %>% 
@@ -725,7 +800,8 @@ counties$area <- as.numeric(st_area(counties))
 
 sites <- df %>% 
   filter(state %in% c("WA", "OR"),
-         apprehension_date >= "2025-01-01") %>% 
+         apprehension_date >= "2025-01-01",
+         site_code == "POO") %>% 
   select(long, lat, cy_quarter) %>% 
   na.omit()
 
@@ -743,7 +819,7 @@ st_crs(sites$geometry) <- 4326
 
 plot_sites <- function(data_to_plot) {ggplot(data = wa) +
   geom_sf() +
-  geom_sf(data = wa, fill = NA) + 
+  geom_sf(data = wa, fill = NA, linewidth=.75) + 
   geom_sf(data = counties, fill = NA) + 
   geom_sf(data = data_to_plot, aes(size = n), shape = 21, color = "black", fill = "red", alpha=.7) +
   pdx_coords +
@@ -835,7 +911,7 @@ p1
 
 ```
 
-```{}
+```{r}
 
 p1 <- df %>% 
   filter(apprehension_date >= "2025-06-01",

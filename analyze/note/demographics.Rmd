@@ -323,12 +323,20 @@ p1 <- dat %>%
   geom_point(color = viridis(1), size = 2) +
   ylim(0, 8) +
   ylab("Years since entry") +
-  labs(title="More arrests of people with longstanding ties to communities",
+  labs(title="More arrests of long-term residents",
        subtitle="Increasing average time since entry",
        caption=general_caption) +
   theme_minimal()
 
 p1
+
+b1 <- df %>% 
+  filter(apprehension_date >= "2022-01-01", 
+         state %in% c("WA", "OR")) %>% 
+  ggplot(aes(x = cy, y = years_since_entry, group = cy)) +
+  geom_boxplot()
+
+b1
 
 dat <- df %>% 
   filter(apprehension_date >= "2022-01-01", 
