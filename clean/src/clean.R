@@ -28,25 +28,25 @@ df <- read_delim(here('clean', 'input', in_file), delim='|') |>
 
 df_cleaned <- df %>% 
   mutate(
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "\\(B\\)\\(6\\), \\(B\\)\\(7\\)\\(C\\)|UNKNOWN PLACE", NA_character_),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "VANCOUVER, OR", "VANCOUVER, WA"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "BATLLEGROUND, OR", "BATTLEGROUND, WA"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "BEAVERTON, CA", "BEAVERTON, WA"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "HAPPY VILLAGE", "HAPPY VALLEY, OR"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "LONGIVIEW, OR", "LONGVIEW, WA"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "HILLSBOROUGH, CA", "HILLSBOROUGH, OR"),
-    app_ldmk_other_comment_text =
+    app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "BEAVERTON, CA", "BEAVERTON, OR"),
     ) %>% 
   mutate(
-    apprehension_landmark_descr =
+    apprehension_landmark_descr_clean =
       case_when(apprehension_landmark_descr == "FEDERAL DETENTION CENTER (FDC)" & is.na(app_ldmk_other_comment_text) ~ "SEATAC, WA",
                 apprehension_landmark_descr == "CLARK COUNTY JAIL" & is.na(app_ldmk_other_comment_text) ~ "VANCOUVER, WA",
                 apprehension_landmark_descr == "CLACKAMAS COUNTY JAIL" & is.na(app_ldmk_other_comment_text) ~ "OREGON CITY, OR",
@@ -54,7 +54,7 @@ df_cleaned <- df %>%
                 apprehension_landmark_descr == "MONROE WASHINGTON STATE REFORMATORY (WSR)" & is.na(app_ldmk_other_comment_text) ~ "MONROE, WA",
                 apprehension_landmark_descr == "NORTHWEST DETENTION CENTER DETAINED DOCKET" & is.na(app_ldmk_other_comment_text) ~ "TACOMA, WA",
                 TRUE ~ apprehension_landmark_descr),
-     apprehension_landmark_descr =
+     apprehension_landmark_descr_clean =
       case_when(
                 str_detect(apprehension_landmark_descr, "POO") & is.na(app_ldmk_other_comment_text) ~ "PORTLAND, OR",
                 str_detect(apprehension_landmark_descr, "PORTLAND") & is.na(app_ldmk_other_comment_text) ~ "PORTLAND, OR",

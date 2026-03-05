@@ -13,8 +13,8 @@ df <- df |>
 	mutate(
 	   to_geocode =
            case_when(
-             is.na(app_ldmk_other_comment_text) ~ apprehension_landmark_descr,
-             TRUE ~ app_ldmk_other_comment_text),
+             is.na(app_ldmk_other_comment_text_clean) ~ apprehension_landmark_descr_clean,
+             TRUE ~ app_ldmk_other_comment_text_clean),
          )
 
 ldmks <- df %>% 
@@ -22,6 +22,10 @@ ldmks <- df %>%
 
 ### Google Maps geocode
 geo <- geo(ldmks$to_geocode, method='google', full_results=TRUE)
+
+out_file <- "sea-i213s-2026-02-13-raw-geo.rds"
+
+saveRDS(geo, here::here("geocode", "output", out_file))
 
 ### Extract selected address components
 geo_clean <- geo %>%
@@ -47,6 +51,11 @@ for (i in 1:nrow(geo_clean)) {
   address_components_tbl <- rbind(address_components_tbl, address_components)
 }
 
+locality_tbl <- address_components_tbl %>% 
+  filter(types == 'locality') %>% 
+  dplyr::select('address', 'short_name') %>% 
+  rename(locality = short_name)
+
 counties_tbl <- address_components_tbl %>% 
   filter(types == 'administrative_area_level_2') %>% 
   dplyr::select('address', 'short_name') %>% 
@@ -57,14 +66,14 @@ states_tbl <- address_components_tbl %>%
   dplyr::select('address', 'short_name') %>% 
   rename(state = short_name)
 
+geo_clean <- left_join(geo_clean, locality_tbl, by='address')
+
 geo_clean <- left_join(geo_clean, counties_tbl, by='address')
 
 geo_clean <- left_join(geo_clean, states_tbl, by='address')
 
 geo_clean_subset <- geo_clean %>% 
-  dplyr::select(lat, long, address, county, state)
-
-
+  dplyr::select(lat, long, address, locality, county, state)
 
 df_out <- df %>% 
   left_join(geo_clean_subset, by = c("to_geocode" = "address"))
