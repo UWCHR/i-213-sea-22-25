@@ -14,10 +14,16 @@ output:
 ```{r setup, message=FALSE, warning=FALSE, include=TRUE}
 
 options(scipen = 1000000)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
 
 library(pacman)
 
 p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, readxl, ggmap, tidygeocoder, sf, rnaturalearth)
+
+general_caption = "Source: DHS I-213 forms obtained via FOIA\nCounty population estimates via U.S. Census 2020-2024\n Analysis: UW Center for Human Rights"
 
 ```
 
@@ -219,17 +225,19 @@ dat <- quarterly_arrests_pc %>%
 
 p1 <- quarterly_arrests_pc %>% 
   mutate(county_state = paste(county, state, sep=", "),
-         cy_quarter = str_replace(cy_quarter, "\\.", "Q")) %>% 
+         cy_quarter = str_replace(cy_quarter, "2025\\.", "Q")) %>% 
   filter(cy == 2025,
          county_state %in% head(dat$county_state, 9)) %>% 
-  ggplot(aes(x = cy_quarter, y = arrests_pc)) +
+  ggplot(aes(x = cy_quarter, y = arrests_pc, fill = arrests_pc)) +
   geom_col() +
-  ylab("Arrests per 100,000 pop.") +
+  ylab("Arrests per 100,000") +
   xlab("Calendar quarter") +
   facet_wrap(~county_state) +
   labs(title = "High rates of immigration arrests per capita",
-       subtitle = "Top counties by arrests per capita, 2025Q4",
-       caption = "I-213 data obtained by UW Center for Human Rights\n2024 population estimate via U.S. census")
+       subtitle = "Top counties by arrests per capita, Oct.-Dec. 2025",
+       caption = general_caption,
+       fill = "Arrests per\n100,000") +
+  theme_minimal()
 
 p1  
 

@@ -14,10 +14,16 @@ output:
 ```{r setup, message=FALSE, warning=FALSE, include=TRUE}
 
 options(scipen = 1000000)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
 
 library(pacman)
 
 p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, ggmap, tidygeocoder, sf, rnaturalearth)
+
+general_caption = "Source: DHS I-213 forms obtained via FOIA\nAnalysis: UW Center for Human Rights"
 
 ```
 
@@ -71,8 +77,10 @@ p1 <- pop_data %>%
   ylab("Age group") +
   xlab("Proportion") +
   guides(fill = guide_legend("Sex")) +
-  labs(title = "Changing age/sex demographics") +
-  facet_wrap(~cy)
+  labs(title = "Changing age/sex demographics",
+       caption = general_caption) +
+  facet_wrap(~cy) +
+  theme_minimal()
 
 p1
 
@@ -152,14 +160,60 @@ dat <- df %>%
     apprehension_date >= "2022-01-01",
          state %in% c("WA", "OR")) %>% 
   mutate(month = floor_date(apprehension_date, unit="months"),
-         citizenship_country_descr = case_when(citizenship_country_descr %in% head(country_top$citizenship_country_descr, 10) ~ citizenship_country_descr,
+         citizenship_country_descr = case_when(citizenship_country_descr %in% 
+                                                 c("CUBA",
+                                                   "HAITI",
+                                                   "VENEZUELA",
+                                                   "NICARAGUA",
+                                                   "GUATEMALA",
+                                                   "HONDURAS",
+                                                   "MEXICO",
+                                                   "CHINA",
+                                                   "INDIA")
+                                               ~ citizenship_country_descr,
                                              TRUE ~ "ALL OTHERS")) %>% 
   count(citizenship_country_descr, cy)
   
 p1 <- dat %>%
   ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
-  geom_col()
+  geom_col() +
+  ylab("Initial arrests") +
+  xlab("Year") +
+  labs(title = "Increasing arrests of people from Mexico, Central America",
+       subtitle = "Selected nationalities",
+       fill = "Citizenship Country",
+       caption = general_caption) +
+  theme_minimal()
+
 p1
+
+p1.1 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col() +
+  ylab("Initial arrests") +
+  xlab("Year") +
+  gghighlight(citizenship_country_descr %in% c("CUBA", "HAITI", "NICARAGUA", "VENEZUELA")) +
+  labs(title = "Increasing arrests of people from Mexico, Central America",
+       subtitle = "Selected nationalities",
+       fill = "Citizenship Country",
+       caption = general_caption) +
+  theme_minimal()
+
+p1.1
+
+p1.2 <- dat %>%
+  ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
+  geom_col() +
+  ylab("Initial arrests") +
+  xlab("Year") +
+  gghighlight(citizenship_country_descr %in% c("MEXICO", "GUATEMALA", "HONDURAS")) +
+  labs(title = "Increasing arrests of people from Mexico, Central America",
+       subtitle = "Selected nationalities",
+       fill = "Citizenship Country",
+       caption = general_caption) +
+  theme_minimal()
+
+p1.2
 
 p2 <- dat %>%
   ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
@@ -265,11 +319,14 @@ dat <- df %>%
 
 p1 <- dat %>% 
   ggplot(aes(x = cy, y = avg_years_since_entry)) +
-  geom_line() +
-  geom_point() +
+  geom_line(color = viridis(1), size = 1.5) +
+  geom_point(color = viridis(1), size = 2) +
   ylim(0, 8) +
   ylab("Years since entry") +
-  labs(title="Increasing average time since entry")
+  labs(title="More arrests of people with longstanding ties to communities",
+       subtitle="Increasing average time since entry",
+       caption=general_caption) +
+  theme_minimal()
 
 p1
 
@@ -308,11 +365,11 @@ dat <- df %>%
   count(cy, any_usc)
 
 p1 <- dat %>% 
-  # mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q")) %>% 
   ggplot(aes(x = cy, y = n, fill = any_usc)) +
   geom_col() +
-  # scale_x_discrete(breaks = every_nth(n = 2)) +
-  labs(title = "Increasing number of people with USC children arrested")
+  labs(title = "Increasing number of people with USC children arrested",
+       caption=general_caption) +
+  theme_minimal()
 
 p1
 
