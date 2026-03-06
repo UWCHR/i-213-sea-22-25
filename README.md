@@ -15,6 +15,33 @@ Note that `geocode/src/geocode.R` requires Google Maps API credentials ("GOOGLEG
 
 U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
+Columns created in this repo to facilitate analysis:
+
+- "any_convicted": Any charges with status "Convicted" in `criminal_charges` field
+- "any_pending": Any charges with status "Pending" in `criminal_charges` field
+- "any_dismissed": Any charges with status "Dismissed" in `criminal_charges` field
+- "any_overturned": Any charges with status "Overturned" in `criminal_charges` field
+- "any_unknown": Any charges with status "IIDS ETL NULL" in `criminal_charges` field
+- "criminal_charge_status": Summary of `criminal_charges` field, "Convicted" if any convictions, "Pending" if no convictions and any pending charges, otherwise "None"
+- "total_children": Total children in `child_count` field
+- "any_usc": Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field
+- "apprehension_landmark_descr_clean": Cleaned version of `apprehension_landmark_descr`
+- "app_ldmk_other_comment_text_clean": Cleaned version of `app_ldmk_other_comment_text`
+- "to_geocode": Value passed to Google Maps API for geocoding; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
+- "lat": Latitude of `to_geocode` via Google Maps API
+- "long": Longitude of `to_geocode` via Google Maps API
+- "locality": City/town of `to_geocode` via Google Maps API
+- "county": County of `to_geocode` via Google Maps API
+- "state": State of `to_geocode` via Google Maps API
+- "week": Week of `apprehension_date`, starting on Monday 
+- "month": Month of `apprehension_date`
+- "cy_quarter": Calendar year and quarter of `apprehension_date`
+- "fy_quarter": U.S. government fiscal year and quarter of `apprehension_date`
+- "fy": U.S. government fiscal year of `apprehension_date`
+- "cy": Calendar year of `apprehension_date`
+- "days_since_entry": Difference between `entry_date` and `apprehension_date` in days
+- "years_since": Difference between `entry_date` and `apprehension_date` in years
+
 Sensitive or fully redacted columns dropped in separate repository:
 
 ```
@@ -56,26 +83,3 @@ redacted_cols <- c(
 	)
 ```
 
-Columns created in this repo to facilitate analysis:
-
-- "week"
-- "any_convicted"                   
-- "any_pending"
-- "any_dismissed"                   
-- "any_overtunred"
-- "any_unknown"                     
-- "criminal_charge_status"
-- "total_children"                  
-- "any_usc"
-- "to_geocode"                      
-- "lat"
-- "long"                            
-- "county"
-- "state"                           
-- "month"
-- "cy_quarter"                      
-- "fy_quarter"
-- "fy"                              
-- "cy"
-- "days_since_entry"                
-- "years_since"
