@@ -14,10 +14,22 @@ output:
 ```{r setup, message=FALSE, warning=FALSE, include=TRUE}
 
 options(scipen = 1000000)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
 
 library(pacman)
 
-p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, ggmap, tidygeocoder, sf, rnaturalearth)
+p_load(here, tidyverse, zoo, scales, lubridate, ggplot2, plotly, gghighlight, viridis, ggmap, tidygeocoder, sf, rnaturalearth)
+
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+
+every_2nd_nth = function(n) {
+  return(function(x) {x[c(FALSE, rep(TRUE, n - 1))]})
+}
 
 ```
 
@@ -44,7 +56,8 @@ ddp_arrests_sea <- ddp_arrests %>%
          cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
          fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
          fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),,
-         cy = year(apprehension_date)) %>% 
+         cy = year(apprehension_date)
+         ) %>% 
   filter(apprehension_aor == "Seattle Area of Responsibility")
 
 rm(ddp_arrests)
@@ -240,16 +253,75 @@ p1
 
 p2 <- dat %>% 
   mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
+         source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
          ) %>% 
-  ggplot(aes(x = fy_quarter, y = n, color=source, group = source)) +
+  ggplot(aes(x = fy_quarter, y = n, linetype =source, group = source),color = viridis(1)) +
   geom_line() +
   ylab("") +
-  ylim(0, NA) +
-  xlab("Fiscal Quarter") +
+  ylim(0, 2500) +
+  xlab("Fiscal quarter") +
   scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in Q1 of FY2026",
-       subtitle = "Seattle Area of Responsibility",
-       color = "Data source")
+  labs(title = "ICE apprehensions in late 2025 approach historical high point",
+       subtitle = "Seattle Area of Responsibility, Oct. 2011 - Dec. 2025",
+       linetype = "Data source",
+       caption = "Sources: I-213 dataset obtained by UWCHR,\nICE arrests datasets obtained by UWCHR, Deportation Data Project.") +
+  theme_minimal()
+
+p2
+
+
+```
+
+```{r}
+  
+uwchr_sea_per_cy_quarter <- uwchr_sea %>% 
+  count(cy_quarter, source) %>% 
+  filter(cy_quarter != "2023.1")
+  
+i213s_per_cy_quarter <- df %>% 
+  mutate(source = "I-213s (UWCHR)") %>% 
+   filter(month >= "2022-01-01") %>%
+  count(cy_quarter, source)
+
+ddp_sea_per_cy_quarter <- ddp_arrests_sea %>% 
+  filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
+  count(cy_quarter) %>% 
+  filter(cy_quarter != "2023.3",
+         cy_quarter != "2025.4") %>% 
+  mutate(source = "All arrests (DDP)")
+
+dat <- rbind(i213s_per_cy_quarter, ddp_sea_per_cy_quarter, uwchr_sea_per_cy_quarter) %>% 
+  mutate(cy_quarter = as.factor(as.character(cy_quarter)))
+
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+
+p1 <- dat %>% 
+  mutate(cy_quarter = str_replace_all(cy_quarter, "\\.", "Q")) %>% 
+  ggplot(aes(x = cy_quarter, y = n, fill = source)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  scale_x_discrete(breaks = every_nth(n = 8)) +
+  labs(title = "Historic increase in ICE apprehensions in\nQ4 of CY 2026",
+       subtitle = "Seattle Area of Responsibility")
+
+p1
+
+p2 <- dat %>% 
+  mutate(cy_quarter = str_replace_all(cy_quarter, "\\.", "Q"),
+         source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
+         ) %>% 
+  ggplot(aes(x = cy_quarter, y = n, linetype = source, group = source)) +
+  geom_line(color = viridis(1)) +
+  ylab("Arrests") +
+  ylim(0, 2500) +
+  xlab("Calendar quarter") +
+  scale_x_discrete(breaks = every_nth(n = 8)) +
+  labs(title = "ICE apprehensions in late 2025 approach historical high point",
+       subtitle = "Seattle Area of Responsibility, Oct. 2011 - Dec. 2025",
+       linetype = "Data source",
+       caption = "Sources: I-213 dataset obtained by UWCHR,\nICE arrests datasets obtained by UWCHR, Deportation Data Project.") +
+  theme_minimal()
 
 p2
 

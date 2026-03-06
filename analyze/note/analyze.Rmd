@@ -84,7 +84,7 @@ p1 <- df %>%
   geom_line(color = viridis(1)) +
   xlab("Week") +
   ylab("Arrests") +
-  labs(title = "Initial arrests per week",
+  labs(title = "Arrests per week",
        subtitle = "I-213s forms generated in Seattle Area of Responsibility",
        caption = general_caption) +
   theme_minimal()
@@ -94,10 +94,11 @@ p1
 p2 <- df %>% 
   count(month) %>% 
   ggplot(aes(x = month, y = n)) +
-  geom_line(color = viridis(1)) +
+  geom_line(color = viridis(1), size = 1.5) +
   xlab("Month") +
   ylab("Arrests") +
-  labs(title = "Initial arrests per month",
+  ylim(0, 800) +
+  labs(title = "Arrests per month",
        subtitle = "I-213s forms generated in Seattle Area of Responsibility",
        caption = general_caption) +
   theme_minimal()
@@ -112,8 +113,8 @@ p3 <- df %>%
   xlab("Calendar quarter") +
   ylab("Arrests") +
   scale_x_discrete(breaks = every_2nd_nth(n = 2)) +
-  labs(title = "Initial arrests per quarter",
-       subtitle = "I-213s forms generated in Seattle Area of Responsibility",
+  labs(title = "Arrests per quarter",
+       subtitle = "I-213s forms generated in Seattle Area of Responsibility (AK, OR, WA)",
        caption = general_caption) +
   theme_minimal()
 
@@ -435,17 +436,20 @@ top_counties <- i213s_per_cy_quarter_county_pct_change %>%
   filter(cy_quarter == "2025Q4") %>% 
   arrange(desc(n))
 
+county_levels <- unique(top_counties$county_state)
+
 p1 <- i213s_per_cy_quarter_county_pct_change %>% 
   filter(county_state %in% head(top_counties$county_state, 9),
          ) %>% 
-  mutate(cy_quarter = str_replace(cy_quarter, "2025", "")) %>% 
+  mutate(cy_quarter = str_replace(cy_quarter, "2025", ""),
+         county_state = factor(county_state, levels = county_levels)) %>% 
   ggplot(aes(x = cy_quarter, y = n, fill = n)) +
   geom_col(position = position_dodge2(preserve = "single")) +
-  ylab("Initial arrests") +
-  xlab("Calendar quarter") +
+  ylab("Arrests") +
+  xlab("Calendar quarter 2025") +
   facet_wrap(~county_state) +
-  labs(title = "Initial arrests increase across OR, WA during 2025",
-       subtitle = "Top counties by total initial arrests during Oct.-Dec. 2025",
+  labs(title = "Arrests increase across OR, WA during 2025",
+       # subtitle = "Top counties by total arrests during Oct.-Dec. 2025",
        caption = general_caption,
        fill = "Initial\narrests") +
   theme_minimal()

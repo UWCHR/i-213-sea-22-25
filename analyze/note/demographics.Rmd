@@ -177,7 +177,7 @@ dat <- df %>%
 p1 <- dat %>%
   ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
   geom_col() +
-  ylab("Initial arrests") +
+  ylab("Arrest") +
   xlab("Year") +
   labs(title = "Increasing arrests of people from Mexico, Central America",
        subtitle = "Selected nationalities",
@@ -190,7 +190,7 @@ p1
 p1.1 <- dat %>%
   ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
   geom_col() +
-  ylab("Initial arrests") +
+  ylab("Arrest") +
   xlab("Year") +
   gghighlight(citizenship_country_descr %in% c("CUBA", "HAITI", "NICARAGUA", "VENEZUELA")) +
   labs(title = "Increasing arrests of people from Mexico, Central America",
@@ -204,7 +204,7 @@ p1.1
 p1.2 <- dat %>%
   ggplot(aes(x = cy, y = n, fill = citizenship_country_descr)) +
   geom_col() +
-  ylab("Initial arrests") +
+  ylab("Arrest") +
   xlab("Year") +
   gghighlight(citizenship_country_descr %in% c("MEXICO", "GUATEMALA", "HONDURAS")) +
   labs(title = "Increasing arrests of people from Mexico, Central America",
