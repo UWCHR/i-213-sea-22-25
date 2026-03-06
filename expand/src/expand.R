@@ -25,7 +25,7 @@ condensed_criminal_charges <- expanded_criminal_charges %>%
   summarize(any_convicted = any(CHARGE_STATUS == "Convicted"),
             any_pending = any(CHARGE_STATUS == "Pending"),
             any_dismissed = any(CHARGE_STATUS == "Dismissed"),
-            any_overtunred = any(CHARGE_STATUS == "Overturned"),
+            any_overturned = any(CHARGE_STATUS == "Overturned"),
             any_unknown = any(CHARGE_STATUS == "IIDS ETL NULL"))
 
 df_out <- df %>% 
