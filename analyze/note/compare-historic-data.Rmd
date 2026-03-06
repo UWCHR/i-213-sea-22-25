@@ -64,99 +64,7 @@ rm(ddp_arrests)
 
 ```
 
-```{r}
 
-p1 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         week >= "2022-01-01") %>% 
-  count(week) %>% 
-  ggplot(aes(x = week, y = n)) +
-  geom_line() +
-  labs(title = "I-213 arrests per week",
-       subtitle = "Seattle AOR")
-
-p1
-
-p2 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date >= "2022-01-01") %>% 
-  count(month) %>% 
-  ggplot(aes(x = month, y = n)) +
-  geom_line() +
-  labs(title = "I-213 arrests per month",
-       subtitle = "Seattle AOR")
-
-p2
-
-p2.1 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date >= "2022-01-01") %>% 
-  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
-                         TRUE ~ "ALL OTHERS")) %>% 
-  count(month, state) %>% 
-  ggplot(aes(x = month, y = n, color = state, group=state)) +
-  geom_line() +
-  labs(title = "I-213 arrests per month",
-       subtitle = "Seattle AOR")
-
-p2.1
-
-p3 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date >= "2022-01-01") %>% 
-  mutate(state = case_when(state %in% c("WA", "OR", "AK") ~ state,
-                         TRUE ~ "ALL OTHERS")) %>% 
-  count(month, state) %>% 
-  ggplot(aes(x = month, y = n, fill = state)) +
-  geom_col(position='stack') +
-  labs(title = "I-213 arrests per month",
-       subtitle = "Seattle AOR")
-
-p3
-
-p3.1 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date >= "2022-01-01",
-         state %in% c("WA", "OR")) %>%
-  count(month, state) %>% 
-  ggplot(aes(x = month, y = n, color = state)) +
-  geom_line() +
-  labs(title = "Immigration arrests in Oregon outpace Washington in Oct.-Dec. 2025",
-       # subtitle = "Seattle AOR"
-       )
-
-p3.1
-
-p3.2 <- df %>% 
-  filter(area_of_responsibility_code == "SEA",
-         apprehension_date >= "2025-01-01",
-         state %in% c("WA", "OR")) %>%
-  count(month, state) %>% 
-  ggplot(aes(x = month, y = n, color = state)) +
-  geom_line() +
-  annotate(
-    'text',
-    x = as.Date("2025-05-01"),
-    y = 310,
-    label = 'Steady increase in arrests\nacross region during early 2025',
-    fontface = 'bold', 
-    size = 4.5
-  ) +
-  annotate(
-    'text',
-    x = as.Date("2025-07-01"),
-    y = 810,
-    label = 'Surge of arrests in Oregon\nduring Oct.-Dec.',
-    fontface = 'bold', 
-    size = 4.5
-  ) +
-  labs(title = "Immigration arrests in Oregon outpace Washington in Oct.-Dec. 2025",
-       # subtitle = "Seattle AOR"
-       )
-
-p3.2
-
-```
 
 ```{r}
 
@@ -275,56 +183,124 @@ p2
 ```{r}
   
 uwchr_sea_per_cy_quarter <- uwchr_sea %>% 
-  count(cy_quarter, source) %>% 
-  filter(cy_quarter != "2023.1")
+  mutate(cy_quarter_zoo = as.yearqtr(arrest_date, format = "%Y-%M-%D")) %>% 
+  count(cy_quarter_zoo, source) %>% 
+  filter(cy_quarter_zoo != "2023-1")
   
 i213s_per_cy_quarter <- df %>% 
-  mutate(source = "I-213s (UWCHR)") %>% 
-   filter(month >= "2022-01-01") %>%
-  count(cy_quarter, source)
+  mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D"),
+    source = "I-213s (UWCHR)") %>% 
+   filter(apprehension_date >= "2022-01-01") %>%
+  count(cy_quarter_zoo, source)
 
 ddp_sea_per_cy_quarter <- ddp_arrests_sea %>% 
-  filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
-  count(cy_quarter) %>% 
-  filter(cy_quarter != "2023.3",
-         cy_quarter != "2025.4") %>% 
+  mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D")) %>% 
+  filter(apprehension_aor == "Seattle Area of Responsibility",) %>% 
+  count(cy_quarter_zoo) %>% 
+  filter(cy_quarter_zoo != "2023-3",
+         cy_quarter_zoo != "2025-4") %>% 
   mutate(source = "All arrests (DDP)")
 
-dat <- rbind(i213s_per_cy_quarter, ddp_sea_per_cy_quarter, uwchr_sea_per_cy_quarter) %>% 
-  mutate(cy_quarter = as.factor(as.character(cy_quarter)))
-
-every_nth = function(n) {
-  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
-}
+dat <- rbind(i213s_per_cy_quarter, ddp_sea_per_cy_quarter, uwchr_sea_per_cy_quarter)
 
 p1 <- dat %>% 
-  mutate(cy_quarter = str_replace_all(cy_quarter, "\\.", "Q")) %>% 
-  ggplot(aes(x = cy_quarter, y = n, fill = source)) +
-  geom_col(position = position_dodge2(preserve = "single")) +
-  scale_x_discrete(breaks = every_nth(n = 8)) +
-  labs(title = "Historic increase in ICE apprehensions in\nQ4 of CY 2026",
-       subtitle = "Seattle Area of Responsibility")
-
-p1
-
-p2 <- dat %>% 
-  mutate(cy_quarter = str_replace_all(cy_quarter, "\\.", "Q"),
-         source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
+  mutate(source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
          ) %>% 
-  ggplot(aes(x = cy_quarter, y = n, linetype = source, group = source)) +
+  ggplot(aes(x = cy_quarter_zoo, y = n, linetype = source, group = source)) +
   geom_line(color = viridis(1)) +
   ylab("Arrests") +
   ylim(0, 2500) +
-  xlab("Calendar quarter") +
-  scale_x_discrete(breaks = every_nth(n = 8)) +
+  xlab("") +
+  scale_x_yearqtr(format = "%Y") +
   labs(title = "ICE apprehensions in late 2025 approach historical high point",
        subtitle = "Seattle Area of Responsibility, Oct. 2011 - Dec. 2025",
        linetype = "Data source",
        caption = "Sources: I-213 dataset obtained by UWCHR,\nICE arrests datasets obtained by UWCHR, Deportation Data Project.") +
   theme_minimal()
 
-p2
+p1
 
 
 ```
 
+# Comparison of counts per country of citizenship
+
+I-213 records are produced at the time of initial apprehension of someone deemed "deportable/inadmissible"; they do not appear to reflect later arrests of people released on parole, electronic detention, or other forms of alternatives to detention. In the below, we analyze the differences in counts of arrests by country of citizenship for the Seattle AOR during the time period of overlap between the I-213 data and data obtained by the Deportation Data Project. Discrepancies in total arrest counts vary widely by nationality in ways that may map onto historic DHS policy shifts and may obscure actual trends in contemporary arrests.
+
+```{r}
+
+ddp_country_per_cy_q <- ddp_arrests_sea %>% 
+  filter(apprehension_date >= "2023-10-01",
+         apprehension_date <= "2025-07-15") %>% 
+  count(cy_quarter, citizenship_country) %>% 
+  mutate(source = "DDP")
+
+i213_country_per_cy_q <- df %>% 
+  filter(apprehension_date >= "2023-10-01",
+       apprehension_date <= "2025-07-15") %>% 
+  count(cy_quarter, citizenship_country_descr) %>% 
+  rename(citizenship_country = citizenship_country_descr) %>% 
+  mutate(source = "i213s")
+
+dat <- rbind(ddp_country_per_cy_q, i213_country_per_cy_q)
+
+dat_wide <- dat %>% pivot_wider(id_cols = c('cy_quarter', 'citizenship_country'), names_from = 'source', values_from = 'n', values_fill = 0) %>% 
+  mutate(diff = DDP - i213s,
+         pct_missing = diff / DDP)
+
+```
+
+```{r}
+
+ddp_country_per_cy <- ddp_arrests_sea %>% 
+  filter(apprehension_date >= "2023-10-01",
+         apprehension_date <= "2025-07-15") %>% 
+  count(cy, citizenship_country) %>% 
+  mutate(source = "DDP")
+
+i213_country_per_cy <- df %>% 
+  filter(apprehension_date >= "2023-10-01",
+       apprehension_date <= "2025-07-15") %>% 
+  count(cy, citizenship_country_descr) %>% 
+  rename(citizenship_country = citizenship_country_descr) %>% 
+  mutate(source = "i213s")
+
+dat <- rbind(ddp_country_per_cy, i213_country_per_cy)
+
+dat_wide <- dat %>%
+  filter(n > 10) %>% 
+  pivot_wider(id_cols = c('cy', 'citizenship_country'),
+              names_from = 'source',
+              values_from = 'n',
+              values_fill = 0) %>% 
+  mutate(diff = DDP - i213s,
+         pct_missing = diff / DDP)
+
+```
+
+```{r}
+
+ddp_country <- ddp_arrests_sea %>% 
+  filter(apprehension_date >= "2023-10-01",
+         apprehension_date <= "2025-07-15") %>% 
+  count(citizenship_country) %>% 
+  mutate(source = "DDP")
+
+i213_country <- df %>% 
+  filter(apprehension_date >= "2023-10-01",
+       apprehension_date <= "2025-07-15") %>% 
+  count(citizenship_country_descr) %>% 
+  rename(citizenship_country = citizenship_country_descr) %>% 
+  mutate(source = "i213s")
+
+dat <- rbind(ddp_country, i213_country)
+
+dat_wide <- dat %>%
+  pivot_wider(id_cols = c('citizenship_country'),
+              names_from = 'source',
+              values_from = 'n',
+              values_fill = 0) %>% 
+  mutate(diff = DDP - i213s,
+         pct_missing = diff / DDP)
+
+```

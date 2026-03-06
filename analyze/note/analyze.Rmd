@@ -106,13 +106,14 @@ p2 <- df %>%
 p2
 
 p3 <- df %>% 
-  count(cy_quarter) %>%
-  ggplot(aes(x = cy_quarter, y = n, group=1)) +
-  geom_line(color = viridis(1), size = 1.5) +
+  mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D")) %>% 
+  count(cy_quarter_zoo) %>%
+  ggplot(aes(x = cy_quarter_zoo, y = n, group=1)) +
+  geom_line(color = viridis(1), linewidth = 1.5) +
   ylim(0, 2500) +
-  xlab("Calendar quarter") +
+  xlab("") +
   ylab("Arrests") +
-  scale_x_discrete(breaks = every_2nd_nth(n = 2)) +
+  scale_x_yearqtr(format = "%Y") +
   labs(title = "Arrests per quarter",
        subtitle = "I-213s forms generated in Seattle Area of Responsibility (AK, OR, WA)",
        caption = general_caption) +
