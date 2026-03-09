@@ -1,0 +1,200 @@
+---
+title: "ICE I-213 analysis"
+author: "UWCHR"
+date: "2025-09-22"
+output:
+    html_document:
+        html_preview: true
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        code_folding: hide
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=TRUE}
+
+options(scipen = 1000000)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
+
+library(pacman)
+
+p_load(here, tidyverse, zoo, lubridate, ggplot2, plotly, gghighlight, viridis, readxl, ggmap, tidygeocoder, sf, rnaturalearth)
+
+general_caption = "Source: DHS I-213 forms obtained via FOIA\nCounty population estimates via U.S. Census 2020-2024\n Analysis: UW Center for Human Rights"
+
+```
+
+
+```{r load_data, message=FALSE, warning=FALSE, include=TRUE}
+
+file <- "sea-i213s-2026-02-13-geocoded.csv"
+
+df <- read_delim(here('analyze', 'input', file), delim='|')
+
+annual_arrests_pc <- read_delim(here('per-capita', 'output', 'annual-arrests-per-capita-wa-or-2022-2025.csv' ))
+
+quarterly_arrests_pc <- read_delim(here('per-capita', 'output', 'quarterly-arrests-per-capita-wa-or-2022-2025.csv' ))
+
+```
+
+# Annual arrests per capita
+
+
+```{r}
+
+p1 <- annual_arrests_pc %>%
+  filter(state == "WA") %>%
+  ggplot(aes(x = cy, y = arrests_pc, color = county)) +
+  geom_line()
+
+ggplotly(p1)
+
+p2 <- annual_arrests_pc %>%
+  filter(state == "OR") %>%
+  ggplot(aes(x = cy, y = arrests_pc, color = county)) +
+  geom_line()
+
+ggplotly(p2)
+
+write_delim(annual_arrests_pc, here::here('analyze', 'output', 'annual-arrests-per-capita-wa-or-2022-2025.csv'), delim = ",", na='')
+
+p3 <- annual_arrests_pc %>%
+  filter(state == "OR") %>%
+  ggplot(aes(x = cy, y = arrests_pc)) +
+  geom_col() +
+  facet_wrap(~county)
+
+p3
+
+```
+
+
+
+
+### Quarterly analysis 2025
+
+```{r}
+
+p1 <- quarterly_arrests_pc %>% 
+  filter(state == "WA") %>% 
+  mutate(county = str_c(county, state, sep = ", ")) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc, color = county, group = county)) +
+  geom_line()
+
+ggplotly(p1)
+
+p2 <- quarterly_arrests_pc %>% 
+  filter(state == "OR") %>% 
+  mutate(county = str_c(county, state, sep = ", ")) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc, color = county, group = county)) +
+  geom_line()
+
+ggplotly(p2)
+
+p3 <- quarterly_arrests_pc %>% 
+  mutate(county = str_c(county, state, sep = ", ")) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc, color = county, group = county)) +
+  geom_line()
+
+ggplotly(p3)
+
+
+```
+
+```{r arrests_pc_pct_change}
+
+annual_arrests_pc <- annual_arrests_pc %>% 
+  group_by(state, county) %>% 
+  mutate(prev_n = lag(arrests_pc),
+         pct_change = ((arrests_pc - prev_n)/prev_n) * 100 )
+
+quarterly_arrests_pc <- quarterly_arrests_pc %>% 
+  group_by(state, county) %>% 
+  mutate(prev_n = lag(arrests_pc),
+         pct_change = ((arrests_pc - prev_n)/prev_n) * 100 )
+
+p1 <- quarterly_arrests_pc %>% 
+  filter(state == "OR") %>% 
+  ggplot(aes(x = cy_quarter, y = pct_change, fill = county)) +
+  geom_col(position = position_dodge2(preserve = "single"))
+
+ggplotly(p1)
+
+p2 <- quarterly_arrests_pc %>% 
+  filter(state == "WA") %>% 
+  ggplot(aes(x = cy_quarter, y = pct_change, fill = county)) +
+  geom_col(position = position_dodge2(preserve = "single"))
+
+ggplotly(p2)
+
+```
+
+```{r}
+
+dat <- quarterly_arrests_pc %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  filter(cy_quarter == "2025.4") %>% 
+  arrange(desc(arrests_pc))
+
+county_levels <- unique(dat$county_state)
+
+p1 <- quarterly_arrests_pc %>% 
+  mutate(county_state = factor(paste(county, state, sep=", "), levels =county_levels),
+         cy_quarter = str_replace(cy_quarter, "2025\\.", "Q")) %>% 
+  filter(cy == 2025,
+         county_state %in% head(dat$county_state, 9)) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc, fill = arrests_pc)) +
+  geom_col() +
+  ylab("Arrests per 100,000") +
+  xlab("Calendar quarter") +
+  facet_wrap(~county_state) +
+  labs(title = "High rates of immigration arrests per capita",
+       # subtitle = "Top counties by arrests per capita, Oct.-Dec. 2025",
+       caption = general_caption,
+       fill = "Arrests per\n100,000") +
+  theme_minimal()
+
+p1  
+
+```
+
+```{r arrests_per_immigrant_pop}
+
+# Source: https://www.migrationpolicy.org/programs/data-hub/charts/us-immigrant-population-state-and-county
+
+imm_pop <- read_delim(here::here('per-capita', 'input', 'mpi-2019-2023-foreign-born.csv'), delim=',') %>% 
+  janitor::clean_names() %>% 
+  rename(county_state = county)
+
+imm_pop <- imm_pop %>% 
+  mutate(county = str_split_i(county_state, pattern =", ", i=1),
+         state = str_split_i(county_state, pattern =", ", i=2),
+         state = toupper(substr(state, 0, 2)))
+
+dat <- annual_arrests_pc %>% 
+  left_join(imm_pop, by = c("county", "state")) %>% 
+  mutate(arrests_per_imm_pop = arrests / round_county_n_imm * 100000) %>% 
+  filter(!is.na(round_county_n_imm))
+
+p1 <- dat %>% 
+  filter(state == "WA") %>% 
+  ggplot(aes(x = cy, y = arrests_per_imm_pop)) +
+  geom_col() +
+  facet_wrap(~county_state) +
+  labs(title = "Arrests per 100,000 immigrant residents")
+
+p1
+
+p2 <- dat %>% 
+  filter(state == "OR") %>% 
+  ggplot(aes(x = cy, y = arrests_per_imm_pop)) +
+  geom_col() +
+  facet_wrap(~county_state) + 
+  labs(title = "Arrests per 100,000 immigrant residents")
+
+p2
+
+```
