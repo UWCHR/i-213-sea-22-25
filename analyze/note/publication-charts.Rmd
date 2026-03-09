@@ -1,0 +1,261 @@
+---
+title: "ICE I-213 analysis 2022-2025"
+author: "UWCHR"
+date: "2026-02-18"
+output:
+    html_document:
+        html_preview: true
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        code_folding: hide
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=TRUE}
+
+options(scipen = 1000000)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = "viridis")
+options(ggplot2.discrete.fill = "viridis")
+
+library(pacman)
+
+p_load(here, tidyverse, zoo, scales, lubridate, ggplot2, plotly, gghighlight, viridis, ggmap, tidygeocoder, sf, rnaturalearth)
+
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+
+every_2nd_nth = function(n) {
+  return(function(x) {x[c(FALSE, rep(TRUE, n - 1))]})
+}
+
+general_caption = "Source: DHS I-213 forms obtained via FOIA\nAnalysis: UW Center for Human Rights"
+
+per_capita_caption = "Source: DHS I-213 forms obtained via FOIA\nCounty population estimates via U.S. Census 2020-2024\n Analysis: UW Center for Human Rights"
+
+```
+
+
+```{r load_data, message=FALSE, warning=FALSE, include=TRUE}
+
+file <- "sea-i213s-2026-02-13-geocoded.csv"
+
+df <- read_delim(here('analyze', 'input', file), delim='|')
+
+df <- df %>% 
+  filter(apprehension_date >= "2022-01-01") %>% 
+  droplevels()
+
+ddp_arrests <- arrow::read_feather(
+  "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.feather"
+)
+
+ddp_arrests_sea <- ddp_arrests %>% 
+  mutate(apprehension_date = as.Date(apprehension_date),
+         final_order_date = as.Date(final_order_date)) |>
+  mutate(apprehension_method = fct(apprehension_method)) |>
+  mutate(criminality = apprehension_criminality == "1 Convicted Criminal") |>
+  mutate(n_dupe = row_number(), .by = c("apprehension_date", "apprehension_method", "apprehension_criminality", "unique_identifier")) |>
+  filter(is.na(unique_identifier) | n_dupe == 1) |>
+  mutate(week = floor_date(apprehension_date, "week", week_start = "Monday"),
+         month = floor_date(apprehension_date, "month"),
+         cy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 1, with_year=TRUE)),
+         fy_quarter = as.factor(quarter(apprehension_date, fiscal_start = 10, with_year=TRUE)),
+         fy = substr(quarter(apprehension_date, fiscal_start = 10, with_year = TRUE), 0, 4),,
+         cy = year(apprehension_date)
+         ) %>% 
+  filter(apprehension_aor == "Seattle Area of Responsibility")
+
+rm(ddp_arrests)
+
+```
+
+```{r}
+
+# uwchr <- read_delim(here::here('analyze', 'input', 'ice_arrests_fy12-23ytd.csv.gz'), delim='|')
+
+url <- "https://drive.usercontent.google.com/download?id=1XAOS7t3ijImVXQ9G7l6xdCr_rBh8i4cz&export=download&authuser=0&confirm=t&uuid=0c4a4b74-5e5f-4f00-8c8a-eb00a56708f9&at=APcXIO3JvUiU3ilszJZ3EAuIE01Y:1772065031530"
+f <- tempfile(fileext = ".csv.gz")
+download.file(url, f, mode = "wb")
+
+uwchr <- read.delim(f, sep='|')
+
+uwchr_sea <- uwchr %>% 
+  filter(area_of_responsibility == "Seattle Area of Responsibility") %>%
+  mutate(arrest_date = mdy(arrest_date),
+         month = floor_date(arrest_date, unit="month"),
+         cy_quarter = as.factor(quarter(arrest_date, fiscal_start = 1, with_year = TRUE)),
+         fy_quarter = as.factor(quarter(arrest_date, fiscal_start = 10, with_year = TRUE)),
+         fy = as.numeric(substr(quarter(arrest_date, fiscal_start = 10, with_year = TRUE), 0, 4)),
+         cy = year(arrest_date),
+         source = "All arrests (UWCHR)")
+
+rm(uwchr)
+
+```
+
+```{r figure_1, message=FALSE, warning=TRUE}
+
+fig1 <- df %>% 
+  mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D")) %>% 
+  count(cy_quarter_zoo) %>%
+  ggplot(aes(x = cy_quarter_zoo, y = n, group=1)) +
+  geom_line(color = viridis(1), linewidth = 1.5) +
+  ylim(0, 2500) +
+  xlab("") +
+  ylab("Arrests") +
+  scale_x_yearqtr(format = "%Y") +
+  labs(title = "Arrests per quarter",
+       subtitle = "I-213s forms generated in Seattle Area of Responsibility (AK, OR, WA)",
+       caption = general_caption) +
+  theme_minimal()
+
+fig1
+
+```
+
+```{r figure_2, message=FALSE, warning=TRUE}
+  
+uwchr_sea_per_fy_quarter <- uwchr_sea %>% 
+  count(fy_quarter, source) %>% 
+  filter(fy_quarter != "2023.2")
+  
+i213s_per_fy_quarter <- df %>% 
+  mutate(source = "I-213s (UWCHR)") %>%
+  count(fy_quarter, source)
+
+ddp_sea_per_fy_quarter <- ddp_arrests_sea %>% 
+  filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
+  count(fy_quarter) %>% 
+  filter(fy_quarter != "2023.4",
+         fy_quarter != "2026.1") %>% 
+  mutate(source = "All arrests (DDP)")
+
+dat <- rbind(i213s_per_fy_quarter, ddp_sea_per_fy_quarter, uwchr_sea_per_fy_quarter) %>% 
+  mutate(fy_quarter = as.factor(as.character(fy_quarter)))
+
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+
+
+fig2 <- dat %>% 
+  mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
+         source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
+         ) %>% 
+  ggplot(aes(x = fy_quarter, y = n, linetype =source, group = source),color = viridis(1)) +
+  geom_line() +
+  ylab("") +
+  ylim(0, 2500) +
+  xlab("Fiscal quarter") +
+  scale_x_discrete(breaks = every_nth(n = 8)) +
+  labs(title = "ICE apprehensions in late 2025 approach historical high point",
+       subtitle = "Seattle Area of Responsibility, Oct. 2011 - Dec. 2025",
+       linetype = "Data source",
+       caption = "Sources: I-213 dataset obtained by UWCHR,\nICE arrests datasets obtained by UWCHR, Deportation Data Project.") +
+  theme_minimal()
+
+fig2
+
+
+```
+
+```{r figure_3, message=FALSE, warning=TRUE}
+
+fig3 <- df %>% 
+  filter(state %in% c("WA", "OR"),
+         apprehension_date >= '2025-01-01') %>% 
+  count(month, state) %>%
+  ggplot(aes(x = month, y = n, color = state, group = state)) +
+  geom_line(size = 1.5) +
+  ylim(0, NA) +
+  xlab("Month") +
+  ylab("Arrests") +
+  # scale_x_discrete(breaks = every_2nd_nth(n = 2)) +
+  labs(title = "Two trends: Steady increase in WA, sudden increase in OR",
+       # subtitle = "I-213s forms generated in Seattle Area of Responsibility",
+       caption = general_caption) +
+  theme_minimal()
+
+fig3
+
+```
+
+```{r figure_4, message=FALSE, warning=TRUE}
+
+i213s_per_cy_quarter_county_pct_change <- df %>% 
+  filter(apprehension_date >= "2025-01-01",
+         state %in% c("WA", "OR")
+         ) %>% 
+  mutate(county_state = paste(county, state, sep=", "),
+         cy_quarter = str_replace_all(cy_quarter, "\\.", "Q")) %>% 
+  count(cy_quarter, county_state) %>% 
+  mutate(cy_quarter = factor(cy_quarter)) %>% 
+  complete(cy_quarter, county_state, fill=list(n=0)) %>% 
+  group_by(county_state) %>% 
+  mutate(prev_n = lag(n),
+         pct_change = ((n - prev_n)/prev_n) * 100 ) %>% 
+  arrange(county_state, cy_quarter)
+
+top_counties <- i213s_per_cy_quarter_county_pct_change %>% 
+  filter(cy_quarter == "2025Q4") %>% 
+  arrange(desc(n))
+
+county_levels <- unique(top_counties$county_state)
+
+fig4 <- i213s_per_cy_quarter_county_pct_change %>% 
+  filter(county_state %in% head(top_counties$county_state, 9),
+         ) %>% 
+  mutate(cy_quarter = str_replace(cy_quarter, "2025", ""),
+         county_state = factor(county_state, levels = county_levels)) %>% 
+  ggplot(aes(x = cy_quarter, y = n, fill = n)) +
+  geom_col(position = position_dodge2(preserve = "single")) +
+  ylab("Arrests") +
+  xlab("Calendar quarter 2025") +
+  facet_wrap(~county_state) +
+  labs(title = "Arrests increase across OR, WA during 2025",
+       # subtitle = "Top counties by total arrests during Oct.-Dec. 2025",
+       caption = general_caption,
+       fill = "Initial\narrests") +
+  theme_minimal()
+  
+
+fig4
+
+```
+
+```{r figure_5, message=FALSE, warning=TRUE}
+
+annual_arrests_pc <- read_delim(here('per-capita', 'output', 'annual-arrests-per-capita-wa-or-2022-2025.csv' ))
+
+quarterly_arrests_pc <- read_delim(here('per-capita', 'output', 'quarterly-arrests-per-capita-wa-or-2022-2025.csv' ))
+
+dat <- quarterly_arrests_pc %>% 
+  mutate(county_state = paste(county, state, sep=", ")) %>% 
+  filter(cy_quarter == "2025.4") %>% 
+  arrange(desc(arrests_pc))
+
+county_levels <- unique(dat$county_state)
+
+p1 <- quarterly_arrests_pc %>% 
+  mutate(county_state = factor(paste(county, state, sep=", "), levels =county_levels),
+         cy_quarter = str_replace(cy_quarter, "2025\\.", "Q")) %>% 
+  filter(cy == 2025,
+         county_state %in% head(dat$county_state, 9)) %>% 
+  ggplot(aes(x = cy_quarter, y = arrests_pc, fill = arrests_pc)) +
+  geom_col() +
+  ylab("Arrests per 100,000") +
+  xlab("Calendar quarter") +
+  facet_wrap(~county_state) +
+  labs(title = "High rates of immigration arrests per capita",
+       # subtitle = "Top counties by arrests per capita, Oct.-Dec. 2025",
+       caption = per_capita_caption,
+       fill = "Arrests per\n100,000") +
+  theme_minimal()
+
+p1  
+
+```
+
