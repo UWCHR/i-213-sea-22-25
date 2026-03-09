@@ -1,5 +1,5 @@
 ---
-title: "ICE I-213 analysis 2022-2025"
+title: "ICE I-213 analysis 2022-2025: Demographics"
 author: "UWCHR"
 date: "2026-02-18"
 output:
@@ -27,7 +27,6 @@ general_caption = "Source: DHS I-213 forms obtained via FOIA\nAnalysis: UW Cente
 
 ```
 
-
 ```{r load_data, message=FALSE, warning=FALSE, include=TRUE}
 
 file <- "sea-i213s-2026-02-13-geocoded.csv"
@@ -35,6 +34,8 @@ file <- "sea-i213s-2026-02-13-geocoded.csv"
 df <- read_delim(here('analyze', 'input', file), delim='|')
 
 ```
+
+I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources.
 
 ```{r gender}
 

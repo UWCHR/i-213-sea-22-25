@@ -1,17 +1,16 @@
 # i-213-sea-22-25
 
-Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. All results preliminary.
+Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
 Analysis-ready version of dataset in pipe-delimited ('|') CSV format is located at: `geocode/output/sea-i213s-2026-02-13-geocoded.csv`
 
 Task order:
-- `import`
-- `clean`
-- `expand`
-- `geocode`
-- `analyze`
-
-Note that `geocode/src/geocode.R` requires Google Maps API credentials ("GOOGLEGEOCODE_API_KEY") and may incur data charges depending on volume of API queries. Code is optimized to geocode each unique landmark value once. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
+- `import/input/`: Contains original dataset (with minimal prior processing to drop sensitive and fully-redacted fields)
+- `clean/src/clean.R`: Sets up analysis fields, performs cleaning of `apprehension_landmark_descr` and `app_ldmk_other_comment_text` fields
+- `expand/src/expand.R`: Summarizes contents of `criminal_charges` and `child_count` fields
+- `geocode/src/geocode/R`: Geolocates records using Google Maps API based on `to_geocode`
+- `per-capita/src/per-capita.R`: Summarizes annual and quarterly per capita rates of arrest per county in OR, WA
+- `analyze/note/`: Descriptive and exploratory analysis notebooks
 
 U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
