@@ -37,6 +37,9 @@ per_capita_caption = "Source: DHS I-213 forms obtained via FOIA\nCounty populati
 
 ```
 
+I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
+
+U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
 ```{r load_data, message=FALSE, warning=FALSE, include=TRUE}
 
