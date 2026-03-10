@@ -31,19 +31,19 @@ df_cleaned <- df %>%
     app_ldmk_other_comment_text_clean =
            str_replace_all(app_ldmk_other_comment_text, "\\(B\\)\\(6\\), \\(B\\)\\(7\\)\\(C\\)|UNKNOWN PLACE", NA_character_),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "VANCOUVER, OR", "VANCOUVER, WA"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "VANCOUVER(\\.|,) OR", "VANCOUVER, WA"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "BATLLEGROUND, OR", "BATTLEGROUND, WA"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "BATLLEGROUND, OR", "BATTLEGROUND, WA"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "BEAVERTON, CA", "BEAVERTON, WA"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "BEAVERTON, CA", "BEAVERTON, WA"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "HAPPY VILLAGE", "HAPPY VALLEY, OR"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "HAPPY VILLAGE", "HAPPY VALLEY, OR"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "LONGIVIEW, OR", "LONGVIEW, WA"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "LONGIVIEW, OR", "LONGVIEW, WA"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "HILLSBOROUGH, CA", "HILLSBOROUGH, OR"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "HILLSBOROUGH, CA", "HILLSBOROUGH, OR"),
     app_ldmk_other_comment_text_clean =
-           str_replace_all(app_ldmk_other_comment_text, "BEAVERTON, CA", "BEAVERTON, OR"),
+           str_replace_all(app_ldmk_other_comment_text_clean, "BEAVERTON, CA", "BEAVERTON, OR"),
     ) %>% 
   mutate(
     apprehension_landmark_descr_clean =
@@ -68,6 +68,7 @@ df_cleaned <- df %>%
                 TRUE ~ apprehension_landmark_descr)
     )
 
+stopifnot(!"VANCOUVER, OR" %in% df_cleaned$app_ldmk_other_comment_text_clean)
 
 out_file <- 'sea-i213s-2026-02-13.csv.gz'
 
