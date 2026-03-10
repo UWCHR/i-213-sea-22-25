@@ -17,6 +17,8 @@ df <- df |>
              TRUE ~ app_ldmk_other_comment_text_clean),
          )
 
+stopifnot(!"VANCOUVER, OR" %in% df$to_geocode)
+
 ldmks <- df %>% 
   distinct(to_geocode)
 
