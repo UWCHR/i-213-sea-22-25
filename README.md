@@ -14,6 +14,8 @@ Summarized annual and quarterly total and per-capita I-213 arrests, 2022-2025, O
 - [`per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
 - [`per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
 
+U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+
 Task execution order:
 - `import/input/`: Contains original dataset (with minimal prior processing to drop sensitive and fully-redacted fields)
 - `clean/src/clean.R`: Sets up analysis fields, performs cleaning of `apprehension_landmark_descr` and `app_ldmk_other_comment_text` fields
@@ -21,8 +23,6 @@ Task execution order:
 - `geocode/src/geocode/R`: Geolocates records using Google Maps API based on `to_geocode`
 - `per-capita/src/per-capita.R`: Summarizes annual and quarterly per capita rates of arrest per county in OR, WA
 - `analyze/note/`: Descriptive and exploratory analysis notebooks
-
-U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
 Columns created in this repo to facilitate analysis:
 
