@@ -1,6 +1,10 @@
 # i-213-sea-22-25
 
-Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
+Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025.
+
+See UWCHR research memo: https://jsis.washington.edu/humanrights/2026/03/11/new-data-on-pnw-immigration-enforcement-reveal-powerful-surge-in-late-2025/
+
+I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
 Analysis-ready version of dataset in pipe-delimited ('|') CSV format is located at: `geocode/output/sea-i213s-2026-02-13-geocoded.csv`
 
