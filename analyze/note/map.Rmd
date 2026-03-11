@@ -602,6 +602,60 @@ counties %>%
 
 ```
 
+```{r map_or_quarterly, echo=TRUE, warning=FALSE}
+
+or <- states %>% 
+  filter(ID == "Oregon")
+
+counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
+
+counties <- counties %>% 
+  separate(col = 'ID', into = c("state", "county"), sep = ",", remove = FALSE) %>% 
+  filter(state == "oregon") %>% 
+  mutate(state = toupper(substr(state, 1, 2)))
+
+counties$area <- as.numeric(st_area(counties))
+
+counties <- left_join(counties, quarterly_arrests_pc, by = c("county" = "county_lower", "state" = "state")) %>% 
+  drop_na() %>% 
+  filter(cy == 2025) %>% 
+  mutate(cy_quarter = str_replace(cy_quarter, "\\.", "Q"),
+         months = case_when(cy_quarter == "2025Q1" ~ "Jan. - Mar.",
+                            cy_quarter == "2025Q2" ~ "Apr. - Jun.",
+                            cy_quarter == "2025Q3" ~ "Jul. - Sep.",
+                            cy_quarter == "2025Q4" ~ "Oct. - Dec."))
+
+st_crs(or) <- 4326
+st_crs(or$geom) <- 4326
+# st_crs(sites) <- 4326
+# st_crs(sites$geometry) <- 4326
+
+m1 <- ggplot(data = or) +
+  geom_sf() +
+  geom_sf(data = or, fill = NA) + 
+  geom_sf(data = counties, aes(fill = arrests_pc)) + 
+  scale_fill_viridis_c() +
+  or_coords +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid = element_blank()) +
+  facet_wrap(~months) +
+  labs(title = 'Quarterly ICE arrests per capita, Oregon counties',
+       subtitle = "Jan. - Dec. 2025",
+       fill = "Arrests per\n100,000",
+       caption = general_caption)
+
+m1
+
+ggsave("../output/or-quarterly-arrests-pc-2025.png")
+
+```
+
 
 # Discrete arrest sites
 
