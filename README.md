@@ -1,14 +1,20 @@
 # i-213-sea-22-25
 
-Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025.
+Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. Development of this repository is ongoing.
 
 See UWCHR research memo: https://jsis.washington.edu/humanrights/2026/03/11/new-data-on-pnw-immigration-enforcement-reveal-powerful-surge-in-late-2025/
 
 I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
-Analysis-ready version of dataset in pipe-delimited ('|') CSV format is located at: `geocode/output/sea-i213s-2026-02-13-geocoded.csv`
+Analysis-ready versions of dataset:
+- [`geocode/output/sea-i213s-2026-02-13-geocoded.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/geocode/output/sea-i213s-2026-02-13-geocoded.csv) (pipe-delimited CSV)
+- [`geocode/output/sea-i213s-2026-02-13.geocoded.xlsx`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/geocode/output/sea-i213s-2026-02-13-geocoded.xlsx) (XLSX)
 
-Task order:
+Summarized annual and quarterly total and per-capita I-213 arrests, 2022-2025, OR and WA:
+- [`per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
+- [`per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
+
+Task execution order:
 - `import/input/`: Contains original dataset (with minimal prior processing to drop sensitive and fully-redacted fields)
 - `clean/src/clean.R`: Sets up analysis fields, performs cleaning of `apprehension_landmark_descr` and `app_ldmk_other_comment_text` fields
 - `expand/src/expand.R`: Summarizes contents of `criminal_charges` and `child_count` fields
