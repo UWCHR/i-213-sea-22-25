@@ -494,3 +494,34 @@ p1
 
 
 ```
+
+```{r}
+
+temp1 <- df %>% filter(cy == 2025,
+                       state == "WA") %>% 
+  group_by(county) %>% 
+  summarize(n = n()) %>% 
+  ungroup() %>% 
+  mutate(prop = n/sum(n)) %>% 
+  arrange(desc(n))
+
+write_delim(temp1, "wa_arrests_per_county_2025.csv", delim=',')
+
+temp2 <- df %>% filter(cy == 2025,
+                       county == "King County") %>% 
+  group_by(locality) %>% 
+  summarize(n = n()) %>% 
+  ungroup() %>% 
+  mutate(prop = n/sum(n)) %>% 
+  arrange(desc(n))
+
+write_delim(temp1, "king_co_arrests_per_locality_2025.csv", delim=',')
+
+temp3 <- df %>% filter(cy == 2025,
+                       county == "King County") %>% 
+  count(apprehension_landmark_descr, app_ldmk_other_comment_text, to_geocode) %>% 
+  arrange(desc(n))
+
+write_delim(temp3, "king_co_landmarks_2025.csv", delim=',')
+
+```

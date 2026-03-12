@@ -60,7 +60,7 @@ ddp_arrests_sea <- ddp_arrests %>%
          ) %>% 
   filter(apprehension_aor == "Seattle Area of Responsibility")
 
-rm(ddp_arrests)
+# rm(ddp_arrests)
 
 ```
 
@@ -302,5 +302,25 @@ dat_wide <- dat %>%
               values_fill = 0) %>% 
   mutate(diff = DDP - i213s,
          pct_missing = diff / DDP)
+
+```
+
+
+```{r}
+
+ddp_arrests <- ddp_arrests %>% 
+  mutate(gender_code = substr(gender, 0, 1),
+         apprehension_site_landmark = str_trim(toupper(apprehension_site_landmark)),
+         apprehension_method = str_trim(toupper(apprehension_method)),
+         citizenship_country = str_trim(toupper(citizenship_country)))
+
+df <- df %>% 
+    mutate(apprehension_landmark_descr = str_trim(toupper(apprehension_landmark_descr)),
+         apprehension_method_descr = str_trim(toupper(apprehension_method_descr)),
+         citizenship_country_descr = str_trim(toupper(citizenship_country_descr)))
+
+test_join <- left_join(df, ddp_arrests, by = c("citizenship_country_descr" = "citizenship_country", "gender_code" = "gender_code", "apprehension_date" = "apprehension_date", "apprehension_method_descr" = "apprehension_method", "apprehension_landmark_descr" = "apprehension_site_landmark" ))
+
+sum(!is.na(test_join$apprehension_aor)) / nrow(test_join)
 
 ```
