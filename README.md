@@ -8,7 +8,7 @@ I-213 forms document a subset of all ICE arrests, and may systematically underre
 
 Analysis-ready versions of dataset:
 - [`geocode/output/sea-i213s-2026-02-13-geocoded.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/geocode/output/sea-i213s-2026-02-13-geocoded.csv) (pipe-delimited CSV)
-- [`geocode/output/sea-i213s-2026-02-13.geocoded.xlsx`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/geocode/output/sea-i213s-2026-02-13-geocoded.xlsx) (XLSX)
+- [`geocode/output/sea-i213s-2026-02-13-geocoded.xlsx`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/geocode/output/sea-i213s-2026-02-13-geocoded.xlsx) (XLSX)
 
 Summarized annual and quarterly total and per-capita I-213 arrests, 2022-2025, OR and WA:
 - [`per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
