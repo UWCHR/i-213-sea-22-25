@@ -38,7 +38,7 @@ Original data columns (see below for sensitive or fully-redacted columns dropped
 - `area_of_responsibility_name`: Full name of ICE Area of Responsibility (AOR) responsibile for generating I-213 documentation of apprehension
 - `document_type_descr`: Document type ("I-213 (NEW 4/1/97) - Record of Deportable/Inadmissible Alien")
 - `doc_completion_date`: Date document completed
-- `processing_disposition_descr`: Processing disposition of apprehended individual, for details see: https://deportationdata.org/docs/ice.html
+- `processing_disposition_descr`: Processing disposition of apprehended individual at time of apprehension, for details see: https://deportationdata.org/docs/ice.html
 - `citizenship_country_descr`: Citizenship country of apprehended individual
 - `gender_code`: Sex designation of apprehended individual ("M", "F", "U")
 - `age`: Age of apprehended individual at time of apprehension
