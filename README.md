@@ -45,7 +45,7 @@ Original data columns (see below for sensitive or fully-redacted columns dropped
 - `birth_country_descr`: Birth country of apprehended individual
 - `marital_status_descr`: Marital status of apprehended individual
 - `occupation_text`: Occupation of apprehended individual
-- `apprehension_date`: Date of initial apprehension documented in I-213 form
+- `apprehension_date`: Date of initial apprehension documented in I-213 form, (YYYY-MM-DD format)
 - `apprehension_method_descr`: Apprehension method, e.g. "Custodial Arrest" (arrests involving identification via or transfer from jails/prisons), "Non-Custodial Arrest" (arrests in community, street arrests); for details see: https://deportationdata.org/docs/ice.html
 - `apprehension_landmark_descr`: General description of apprehension landmark or operational characteristics of arrest
 - `app_ldmk_other_comment_text`: General location of arrest, often in "city, state" format
@@ -63,30 +63,31 @@ Original data columns (see below for sensitive or fully-redacted columns dropped
 
 Columns created in this repo to facilitate analysis:
 
-- `any_convicted`: Any charges with status "Convicted" in `criminal_charges` field
-- `any_pending`: Any charges with status "Pending" in `criminal_charges` field
-- `any_dismissed`: Any charges with status "Dismissed" in `criminal_charges` field
-- `any_overturned`: Any charges with status "Overturned" in `criminal_charges` field
-- `any_unknown`: Any charges with status "IIDS ETL NULL" in `criminal_charges` field
+- `any_convicted`: Any charges with status "Convicted" in `criminal_charges` field? TRUE/FALSE
+- `any_pending`: Any charges with status "Pending" in `criminal_charges` field? TRUE/FALSE
+- `any_dismissed`: Any charges with status "Dismissed" in `criminal_charges` field? TRUE/FALSE
+- `any_overturned`: Any charges with status "Overturned" in `criminal_charges` field? TRUE/FALSE
+- `any_unknown`: Any charges with status "IIDS ETL NULL" in `criminal_charges` field? TRUE/FALSE
 - `criminal_charge_status`: Summary of `criminal_charges` field, "Convicted" if any convictions, "Pending" if no convictions and any pending charges, otherwise "None"
 - `total_children`: Total children in `child_count` field
-- `any_usc`: Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field
-- `apprehension_landmark_descr_clean`: Cleaned version of `apprehension_landmark_descr`
-- `app_ldmk_other_comment_text_clean`: Cleaned version of `app_ldmk_other_comment_text`
-- `to_geocode`: Value passed to Google Maps API for geocoding; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
+- `any_usc`: Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field? TRUE/FALSE
+- `apprehension_landmark_descr_clean`: Cleaned version of `apprehension_landmark_descr`; see `clean/src/clean.r`
+- `app_ldmk_other_comment_text_clean`: Cleaned version of `app_ldmk_other_comment_text`; see `clean/src/clean.r`
+- `to_geocode`: Value passed to Google Maps API for geocoding in `geocode/src/geocode.R`; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
 - `lat`: Latitude of `to_geocode` via Google Maps API
 - `long`: Longitude of `to_geocode` via Google Maps API
 - `locality`: City/town of `to_geocode` via Google Maps API
 - `county`: County of `to_geocode` via Google Maps API
 - `state`: State of `to_geocode` via Google Maps API
-- `week`: Week of `apprehension_date`, starting on Monday 
-- `month`: Month of `apprehension_date`
-- `cy_quarter`: Calendar year and quarter of `apprehension_date`
-- `fy_quarter`: U.S. government fiscal year and quarter of `apprehension_date`
-- `fy`: U.S. government fiscal year of `apprehension_date`
-- `cy`: Calendar year of `apprehension_date`
+- `week`: Week of `apprehension_date`, starting on Monday (YYYY-MM-DD format)
+- `month`: Month and year of `apprehension_date` (YYYY-MM-01 format)
+- `cy_quarter`: Calendar year and quarter of `apprehension_date` (YYYY.Q format)
+- `fy_quarter`: U.S. government fiscal year and quarter of `apprehension_date` (YYYY.Q format, starting Oct. 1)
+- `fy`: U.S. government fiscal year of `apprehension_date` (YYYY format, starting Oct. 1)
+- `cy`: Calendar year of `apprehension_date` (YYYY format)
 - `days_since_entry`: Difference between `entry_date` and `apprehension_date` in days
 - `years_since`: Difference between `entry_date` and `apprehension_date` in years
+- `trump`: Did arrest occur during second Trump administration? TRUE/FALSE
 
 Sensitive or fully redacted columns dropped in separate repository:
 
