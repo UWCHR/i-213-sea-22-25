@@ -95,7 +95,7 @@ dat_wa <- dat %>%
   
 dat_or <- dat %>% 
   filter(state == "OR") %>% 
-  complete(county, cy_quarter, fill=list(n=0, state = "WA"))
+  complete(county, cy_quarter, fill=list(n=0, state = "OR"))
 
 dat_2 <- rbind(dat_wa, dat_or) %>% 
   mutate(cy = as.numeric(substr(as.character(cy_quarter), 0, 4)))
