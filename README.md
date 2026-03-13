@@ -69,8 +69,8 @@ Columns created in this repo to facilitate analysis:
 - `criminal_charge_status`: Summary of `criminal_charges` field, "Convicted" if any convictions, "Pending" if no convictions and any pending charges, otherwise "None"
 - `total_children`: Total children in `child_count` field
 - `any_usc`: Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field
-- `apprehension_landmark_descr_clean": Cleaned version of `apprehension_landmark_descr`
-- `app_ldmk_other_comment_text_clean": Cleaned version of `app_ldmk_other_comment_text`
+- `apprehension_landmark_descr_clean`: Cleaned version of `apprehension_landmark_descr`
+- `app_ldmk_other_comment_text_clean`: Cleaned version of `app_ldmk_other_comment_text`
 - `to_geocode`: Value passed to Google Maps API for geocoding; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
 - `lat`: Latitude of `to_geocode` via Google Maps API
 - `long`: Longitude of `to_geocode` via Google Maps API
