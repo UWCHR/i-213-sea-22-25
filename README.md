@@ -12,7 +12,7 @@ Analysis-ready versions of dataset:
 
 Summarized annual and quarterly total and per-capita I-213 arrests, 2022-2025, OR and WA:
 - [`per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
-- [`per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
+- [`per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV) (WARNING: This table contains an error in which OR counties with 0 total arrests per quarter have `state` value "WA", this will be fixed ASAP)
 
 U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
