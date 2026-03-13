@@ -2,7 +2,7 @@
 
 Analysis of ICE I-213 data for Seattle Area of Responsibility, 2022-2025. Development of this repository is ongoing.
 
-See UWCHR research memo: https://jsis.washington.edu/humanrights/2026/03/11/new-data-on-pnw-immigration-enforcement-reveal-powerful-surge-in-late-2025/
+See UWCHR research memo associated with this data: https://jsis.washington.edu/humanrights/2026/03/11/new-data-on-pnw-immigration-enforcement-reveal-powerful-surge-in-late-2025/
 
 I-213 forms document a subset of all ICE arrests, and may systematically underrepresent some populations. We recommend caution in interpreting this data without comparison to other sources. Gecoded arrest locations are approximate, they do not represent exact coordinates of the enforcement activity.
 
@@ -14,7 +14,7 @@ Summarized annual and quarterly total and per-capita I-213 arrests, 2022-2025, O
 - [`per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/annual-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
 - [`per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv`](https://github.com/UWCHR/i-213-sea-22-25/blob/main/per-capita/output/quarterly-arrests-per-capita-wa-or-2022-2025.csv) (comma-delimited CSV)
 
-U.S. Census Estimates: https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+Per capita rates of arrest are per 100,000 residents according to U.S. Census County Population Totals 2020-2024 (2024 population used for 2025 per capita rates): https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
 Task execution order:
 - `import/input/`: Contains original dataset (with minimal prior processing to drop sensitive and fully-redacted fields)
@@ -24,32 +24,67 @@ Task execution order:
 - `per-capita/src/per-capita.R`: Summarizes annual and quarterly per capita rates of arrest per county in OR, WA
 - `analyze/note/`: Descriptive and exploratory analysis notebooks
 
+# Notes on data fields
+
+No official data dictionary exists for DHS I-213 forms. Many fields are the same as those included in other ICE datasets, and should conform to documentation produced by the Deportation Data Project: https://deportationdata.org/docs/ice.html
+
+Original data columns (see below for sensitive or fully-redacted columns dropped in separate private repository):
+
+- `site_code`: Three letter code designating ICE sub-field office responsible for generating I-213 documentation of apprehension
+- `site_name`: Full name of ICE sub-field office responsible for generating I-213 documentation of apprehension
+- `area_of_responsibility_code`: Three letter code designating ICE Area of Responsibility (AOR) responsibile for generating I-213 documentation of apprehension
+- `area_of_responsibility_name`: Full name of ICE Area of Responsibility (AOR) responsibile for generating I-213 documentation of apprehension
+- `document_type_descr`: Document type ("I-213 (NEW 4/1/97) - Record of Deportable/Inadmissible Alien")
+- `doc_completion_date`: Date document completed
+- `processing_disposition_descr`: Processing disposition of apprehended individual, for details see: https://deportationdata.org/docs/ice.html
+- `citizenship_country_descr`: Citizenship country of apprehended individual
+- `gender_code`: Sex designation of apprehended individual ("M", "F", "U")
+- `age`: Age of apprehended individual at time of apprehension
+- `birth_country_descr`: Birth country of apprehended individual
+- `marital_status_descr`: Marital status of apprehended individual
+- `occupation_text`: Occupation of apprehended individual
+- `apprehension_date`: Date of initial apprehension documented in I-213 form
+- `apprehension_method_descr`: Apprehension method, e.g. "Custodial Arrest" (arrests involving identification via or transfer from jails/prisons), "Non-Custodial Arrest" (arrests in community, street arrests); for details see: https://deportationdata.org/docs/ice.html
+- `apprehension_landmark_descr`: General description of apprehension landmark or operational characteristics of arrest
+- `app_ldmk_other_comment_text`: General location of arrest, often in "city, state" format
+- `entry_date`: Date of entry to U.S., if known
+- `entry_port_of_entry_code`: Code for Port of Entry where entered U.S., if known
+- `entry_port_of_entry_descr`: Description of Port of Entry where entered U.S., if known
+- `entry_admission_class_descr`: Legal category for admissibility to U.S.
+- `mother_citizenship_country_descr`: Mother citizenship country
+- `father_citizenship_country_descr`: Father citizenship country
+- `spouse_citizenship_country_descr`: Spouse citizenship country
+- `health_status_comment_text`: Indicates apprehended individual's response to question regarding health status 
+- `admin_charges`: Immigration code administrative charge for apprehended individual (JSON format)
+- `criminal_charges`: Criminal charges for apprehended individual (may not be complete) (JSON format)
+- `child_count`: Number and nationality of minor children (JSON format)
+
 Columns created in this repo to facilitate analysis:
 
-- "any_convicted": Any charges with status "Convicted" in `criminal_charges` field
-- "any_pending": Any charges with status "Pending" in `criminal_charges` field
-- "any_dismissed": Any charges with status "Dismissed" in `criminal_charges` field
-- "any_overturned": Any charges with status "Overturned" in `criminal_charges` field
-- "any_unknown": Any charges with status "IIDS ETL NULL" in `criminal_charges` field
-- "criminal_charge_status": Summary of `criminal_charges` field, "Convicted" if any convictions, "Pending" if no convictions and any pending charges, otherwise "None"
-- "total_children": Total children in `child_count` field
-- "any_usc": Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field
-- "apprehension_landmark_descr_clean": Cleaned version of `apprehension_landmark_descr`
-- "app_ldmk_other_comment_text_clean": Cleaned version of `app_ldmk_other_comment_text`
-- "to_geocode": Value passed to Google Maps API for geocoding; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
-- "lat": Latitude of `to_geocode` via Google Maps API
-- "long": Longitude of `to_geocode` via Google Maps API
-- "locality": City/town of `to_geocode` via Google Maps API
-- "county": County of `to_geocode` via Google Maps API
-- "state": State of `to_geocode` via Google Maps API
-- "week": Week of `apprehension_date`, starting on Monday 
-- "month": Month of `apprehension_date`
-- "cy_quarter": Calendar year and quarter of `apprehension_date`
-- "fy_quarter": U.S. government fiscal year and quarter of `apprehension_date`
-- "fy": U.S. government fiscal year of `apprehension_date`
-- "cy": Calendar year of `apprehension_date`
-- "days_since_entry": Difference between `entry_date` and `apprehension_date` in days
-- "years_since": Difference between `entry_date` and `apprehension_date` in years
+- `any_convicted`: Any charges with status "Convicted" in `criminal_charges` field
+- `any_pending`: Any charges with status "Pending" in `criminal_charges` field
+- `any_dismissed`: Any charges with status "Dismissed" in `criminal_charges` field
+- `any_overturned`: Any charges with status "Overturned" in `criminal_charges` field
+- `any_unknown`: Any charges with status "IIDS ETL NULL" in `criminal_charges` field
+- `criminal_charge_status`: Summary of `criminal_charges` field, "Convicted" if any convictions, "Pending" if no convictions and any pending charges, otherwise "None"
+- `total_children`: Total children in `child_count` field
+- `any_usc`: Does individual have any U.S. citizen children, based on whether any children with nationality "United States" in `child_count` field
+- `apprehension_landmark_descr_clean": Cleaned version of `apprehension_landmark_descr`
+- `app_ldmk_other_comment_text_clean": Cleaned version of `app_ldmk_other_comment_text`
+- `to_geocode`: Value passed to Google Maps API for geocoding; preferring `app_ldmk_other_comment_text_clean` if present, otherwise `apprehension_landmark_descr_clean`
+- `lat`: Latitude of `to_geocode` via Google Maps API
+- `long`: Longitude of `to_geocode` via Google Maps API
+- `locality`: City/town of `to_geocode` via Google Maps API
+- `county`: County of `to_geocode` via Google Maps API
+- `state`: State of `to_geocode` via Google Maps API
+- `week`: Week of `apprehension_date`, starting on Monday 
+- `month`: Month of `apprehension_date`
+- `cy_quarter`: Calendar year and quarter of `apprehension_date`
+- `fy_quarter`: U.S. government fiscal year and quarter of `apprehension_date`
+- `fy`: U.S. government fiscal year of `apprehension_date`
+- `cy`: Calendar year of `apprehension_date`
+- `days_since_entry`: Difference between `entry_date` and `apprehension_date` in days
+- `years_since`: Difference between `entry_date` and `apprehension_date` in years
 
 Sensitive or fully redacted columns dropped in separate repository:
 
