@@ -315,12 +315,20 @@ ddp_arrests <- ddp_arrests %>%
          citizenship_country = str_trim(toupper(citizenship_country)))
 
 df <- df %>% 
+  filter(apprehension_date >= min(ddp_arrests$apprehension_date) &
+           apprehension_date <= max(ddp_arrests$apprehension_date)) %>% 
     mutate(apprehension_landmark_descr = str_trim(toupper(apprehension_landmark_descr)),
          apprehension_method_descr = str_trim(toupper(apprehension_method_descr)),
          citizenship_country_descr = str_trim(toupper(citizenship_country_descr)))
 
 test_join <- left_join(df, ddp_arrests, by = c("citizenship_country_descr" = "citizenship_country", "gender_code" = "gender_code", "apprehension_date" = "apprehension_date", "apprehension_method_descr" = "apprehension_method", "apprehension_landmark_descr" = "apprehension_site_landmark" ))
 
+# This is not accurate because duplicates but most rows have at least 1 match
 sum(!is.na(test_join$apprehension_aor)) / nrow(test_join)
+
+test_join_distinct_id <- test_join %>% 
+  filter(!is.na(unique_identifier)) %>% 
+  distinct(unique_identifier, .keep_all=TRUE)
+  
 
 ```
