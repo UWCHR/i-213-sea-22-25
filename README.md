@@ -20,8 +20,8 @@ Task execution order:
 - `import/input/`: Contains original dataset (with minimal prior processing to drop sensitive and fully-redacted fields)
 - `clean/src/clean.R`: Sets up analysis fields, performs cleaning of `apprehension_landmark_descr` and `app_ldmk_other_comment_text` fields
 - `expand/src/expand.R`: Summarizes contents of `criminal_charges` and `child_count` fields
-- `geocode/src/geocode/R`: Geolocates records using Google Maps API based on `to_geocode`; outputs analysis-ready versions of dataset
-- `per-capita/src/per-capita.R`: Calculates annual and quarterly per capita rates of arrest per county in OR, WA; outputs summarized versions of dataset
+- `geocode/src/geocode/R`: Geolocates records using Google Maps API based on `to_geocode`; outputs analysis-ready versions of dataset in `geocode/output/`
+- `per-capita/src/per-capita.R`: Calculates annual and quarterly per capita rates of arrest per county in OR, WA; outputs summarized versions of dataset in `per-capita/output/`
 - `analyze/note/`: Descriptive and exploratory analysis notebooks; all results except those in `analyze/output/publication-charts/` should be considered preliminary
 
 # Notes on data fields
