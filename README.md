@@ -28,6 +28,8 @@ Task execution order:
 
 No official data dictionary exists for DHS I-213 forms. Many fields are the same as those included in other ICE datasets, and should conform to documentation produced by the Deportation Data Project: https://deportationdata.org/docs/ice.html
 
+For further discussion of I-213 forms, see: https://uwchr.github.io/i-213-analysis/
+
 Original data columns (see below for sensitive or fully-redacted columns dropped in separate private repository):
 
 - `site_code`: Three letter code designating ICE sub-field office responsible for generating I-213 documentation of apprehension
