@@ -326,7 +326,66 @@ df <- df %>%
            apprehension_date <= max(ddp_arrests$apprehension_date)) %>% 
     mutate(apprehension_landmark_descr = str_trim(toupper(apprehension_landmark_descr)),
          apprehension_method_descr = str_trim(toupper(apprehension_method_descr)),
-         citizenship_country_descr = str_trim(toupper(citizenship_country_descr)))
+         citizenship_country_descr = str_trim(toupper(citizenship_country_descr)),
+         birth_year = year(apprehension_date) - age)
+
+df <- df %>% rowwise() %>%
+  unite(allCols, sep = "", remove = FALSE) %>%
+  mutate(hash = vdigest(allCols)) %>%
+  select(-c(allCols)) %>%
+  arrange(desc(hash))
+
+ddp_arrests_sea <- ddp_arrests_sea %>% rowwise() %>%
+  unite(allCols, sep = "", remove = FALSE) %>%
+  mutate(hash = vdigest(allCols)) %>%
+  select(-c(allCols)) %>%
+  arrange(desc(hash))
+
+```
+
+```{r}
+i213_cols <- c("citizenship_country_descr",
+               "gender_code",
+               "apprehension_date",
+               "apprehension_method_descr",
+               "apprehension_landmark_descr",
+               "birth_year"
+               )
+
+df <- df %>% rowwise() %>%
+  unite(i213_cols, all_of(i213_cols), sep = "", remove = FALSE) %>%
+  mutate(join_hash = vdigest(i213_cols)) %>%
+  select(-c(i213_cols))
+
+i_213_ambig <- df[duplicated(df$join_hash) | duplicated(df$join_hash, fromLast = TRUE), ] %>% 
+  arrange(desc(join_hash))
+
+sum(duplicated(df$join_hash))
+
+ddp_cols <- c("citizenship_country",
+              "gender_code",
+              "apprehension_date",
+              "apprehension_method",
+              "apprehension_site_landmark",
+              "birth_year"
+              )
+
+ddp_arrests_sea <- ddp_arrests_sea %>% rowwise() %>%
+  unite(ddp_cols, all_of(ddp_cols), sep = "", remove = FALSE) %>%
+  mutate(join_hash = vdigest(ddp_cols)) %>%
+  select(-c(ddp_cols))
+
+sum(duplicated(ddp_arrests_sea[ddp_arrests_sea$apprehension_aor == "Seattle Area of Responsibility", "join_hash"]))
+
+ddp_sea_ambig <-  ddp_arrests_sea[duplicated(ddp_arrests_sea$join_hash) | duplicated(ddp_arrests_sea$join_hash, fromLast = TRUE), ]
+
+ddp_sea_ambig <- ddp_sea_ambig %>% 
+  filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
+  arrange(desc(join_hash))
+
+```
+
+```{r}
 
 df <- df %>% rowwise() %>%
   unite(allCols, sep = "", remove = FALSE) %>%
