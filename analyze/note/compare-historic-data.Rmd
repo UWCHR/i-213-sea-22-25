@@ -40,8 +40,8 @@ file <- "sea-i213s-2026-02-13-geocoded.csv"
 
 df <- read_delim(here('analyze', 'input', file), delim='|')
 
-ddp_arrests <- arrow::read_feather(
-  "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.feather"
+ddp_arrests <- arrow::read_parquet(
+  "https://github.com/deportationdata/ice/raw/refs/heads/main/data/arrests-latest.parquet"
 )
 
 ddp_arrests_sea <- ddp_arrests %>% 
@@ -127,8 +127,9 @@ rm(uwchr)
 ```{r}
   
 uwchr_sea_per_fy_quarter <- uwchr_sea %>% 
-  count(fy_quarter, source) %>% 
-  filter(fy_quarter != "2023.2")
+  count(fy_quarter, source)
+# %>% 
+  # filter(fy_quarter != "2023.2")
   
 i213s_per_fy_quarter <- df %>% 
   mutate(source = "I-213s (UWCHR)") %>% 
@@ -138,8 +139,10 @@ i213s_per_fy_quarter <- df %>%
 ddp_sea_per_fy_quarter <- ddp_arrests_sea %>% 
   filter(apprehension_aor == "Seattle Area of Responsibility") %>% 
   count(fy_quarter) %>% 
-  filter(fy_quarter != "2023.4",
-         fy_quarter != "2026.1") %>% 
+  filter(
+    # fy_quarter != "2023.4",
+    #      fy_quarter != "2026.2"
+         ) %>% 
   mutate(source = "All arrests (DDP)")
 
 dat <- rbind(i213s_per_fy_quarter, ddp_sea_per_fy_quarter, uwchr_sea_per_fy_quarter) %>% 
@@ -163,10 +166,10 @@ p2 <- dat %>%
   mutate(fy_quarter = str_replace_all(fy_quarter, "\\.", "Q"),
          source = factor(source, levels = c("I-213s (UWCHR)", "All arrests (DDP)", "All arrests (UWCHR)"))
          ) %>% 
-  ggplot(aes(x = fy_quarter, y = n, linetype =source, group = source),color = viridis(1)) +
-  geom_line() +
+  ggplot(aes(x = fy_quarter, y = n, linetype =source, group = source),) +
+  geom_line(color = viridis(1)) +
   ylab("") +
-  ylim(0, 2500) +
+  ylim(0, NA) +
   xlab("Fiscal quarter") +
   scale_x_discrete(breaks = every_nth(n = 8)) +
   labs(title = "ICE apprehensions in late 2025 approach historical high point",
@@ -185,7 +188,7 @@ p2
 uwchr_sea_per_cy_quarter <- uwchr_sea %>% 
   mutate(cy_quarter_zoo = as.yearqtr(arrest_date, format = "%Y-%M-%D")) %>% 
   count(cy_quarter_zoo, source) %>% 
-  filter(cy_quarter_zoo != "2023-1")
+  filter(cy_quarter_zoo != "2023 Q1")
   
 i213s_per_cy_quarter <- df %>% 
   mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D"),
@@ -197,8 +200,9 @@ ddp_sea_per_cy_quarter <- ddp_arrests_sea %>%
   mutate(cy_quarter_zoo = as.yearqtr(apprehension_date, format = "%Y-%M-%D")) %>% 
   filter(apprehension_aor == "Seattle Area of Responsibility",) %>% 
   count(cy_quarter_zoo) %>% 
-  filter(cy_quarter_zoo != "2023-3",
-         cy_quarter_zoo != "2025-4") %>% 
+  filter(
+    # cy_quarter_zoo != "2022 Q3",
+         ) %>% 
   mutate(source = "All arrests (DDP)")
 
 dat <- rbind(i213s_per_cy_quarter, ddp_sea_per_cy_quarter, uwchr_sea_per_cy_quarter)
@@ -209,11 +213,11 @@ p1 <- dat %>%
   ggplot(aes(x = cy_quarter_zoo, y = n, linetype = source, group = source)) +
   geom_line(color = viridis(1)) +
   ylab("Arrests") +
-  ylim(0, 2500) +
+  ylim(0, NA) +
   xlab("") +
   scale_x_yearqtr(format = "%Y") +
-  labs(title = "ICE apprehensions in late 2025 approach historical high point",
-       subtitle = "Seattle Area of Responsibility, Oct. 2011 - Dec. 2025",
+  labs(title = "ICE apprehensions in late 2025 exceed historical high point",
+       subtitle = "Seattle Area of Responsibility, Oct. 2011 - early Mar. 2025",
        linetype = "Data source",
        caption = "Sources: I-213 dataset obtained by UWCHR,\nICE arrests datasets obtained by UWCHR, Deportation Data Project.") +
   theme_minimal()
@@ -308,11 +312,14 @@ dat_wide <- dat %>%
 
 ```{r}
 
-ddp_arrests <- ddp_arrests %>% 
+vdigest <- Vectorize(digest::digest)
+
+ddp_arrests_sea <- ddp_arrests_sea %>% 
   mutate(gender_code = substr(gender, 0, 1),
          apprehension_site_landmark = str_trim(toupper(apprehension_site_landmark)),
          apprehension_method = str_trim(toupper(apprehension_method)),
-         citizenship_country = str_trim(toupper(citizenship_country)))
+         citizenship_country = str_trim(toupper(citizenship_country)),
+         age = year(apprehension_date) - birth_year)
 
 df <- df %>% 
   filter(apprehension_date >= min(ddp_arrests$apprehension_date) &
@@ -321,14 +328,57 @@ df <- df %>%
          apprehension_method_descr = str_trim(toupper(apprehension_method_descr)),
          citizenship_country_descr = str_trim(toupper(citizenship_country_descr)))
 
-test_join <- left_join(df, ddp_arrests, by = c("citizenship_country_descr" = "citizenship_country", "gender_code" = "gender_code", "apprehension_date" = "apprehension_date", "apprehension_method_descr" = "apprehension_method", "apprehension_landmark_descr" = "apprehension_site_landmark" ))
+df <- df %>% rowwise() %>%
+  unite(allCols, sep = "", remove = FALSE) %>%
+  mutate(hash = vdigest(allCols)) %>%
+  select(-c(allCols)) %>%
+  arrange(desc(hash))
 
-# This is not accurate because duplicates but most rows have at least 1 match
-sum(!is.na(test_join$apprehension_aor)) / nrow(test_join)
+i213_cols <- c("citizenship_country_descr",
+               "gender_code",
+               "apprehension_date",
+               "apprehension_method_descr",
+               "apprehension_landmark_descr",
+               "area_of_responsibility_name"
+               # "age"
+               )
 
-test_join_distinct_id <- test_join %>% 
-  filter(!is.na(unique_identifier)) %>% 
-  distinct(unique_identifier, .keep_all=TRUE)
+df <- df %>% rowwise() %>%
+  unite(i213_cols, all_of(i213_cols), sep = "", remove = FALSE) %>%
+  mutate(join_hash = vdigest(i213_cols)) %>%
+  select(-c(i213_cols))
+
+ddp_arrests_sea <- ddp_arrests_sea %>% rowwise() %>%
+  unite(allCols, sep = "", remove = FALSE) %>%
+  mutate(hash = vdigest(allCols)) %>%
+  select(-c(allCols)) %>%
+  arrange(desc(hash))
+
+ddp_cols <- c("citizenship_country",
+              "gender_code",
+              "apprehension_date",
+              "apprehension_method",
+              "apprehension_site_landmark",
+              "apprehension_aor"
+              # "age"
+              )
+
+ddp_arrests_sea <- ddp_arrests_sea %>% rowwise() %>%
+  unite(ddp_cols, all_of(ddp_cols), sep = "", remove = FALSE) %>%
+  mutate(join_hash = vdigest(ddp_cols)) %>%
+  select(-c(ddp_cols))
+
+sum(ddp_arrests_sea$join_hash %in% df$join_hash) / nrow(ddp_arrests_sea)
+sum(df$join_hash %in% ddp_arrests_sea$join_hash) / nrow(df)
+
+# test_join <- left_join(df, ddp_arrests_sea, by = c("citizenship_country_descr" = "citizenship_country", "gender_code" = "gender_code", "apprehension_date" = "apprehension_date", "apprehension_method_descr" = "apprehension_method", "apprehension_landmark_descr" = "apprehension_site_landmark", "area_of_responsibility_name" = "apprehension_aor" ))
+
+# # This is not accurate because duplicates but most rows have at least 1 match
+# sum(!is.na(test_join$row_original)) / nrow(test_join)
+# 
+# test_join_distinct_id <- test_join %>% 
+#   filter(!is.na(unique_identifier)) %>% 
+#   distinct(unique_identifier, .keep_all=TRUE)
   
 
 ```
