@@ -239,6 +239,11 @@ ddp_country_per_cy_q <- ddp_arrests_sea %>%
   count(cy_quarter, citizenship_country) %>% 
   mutate(source = "DDP")
 
+top_ddp <- ddp_country_per_cy_q %>% 
+  group_by(citizenship_country) %>% 
+  summarize(n = sum(n)) %>% 
+  arrange(desc(n))
+
 i213_country_per_cy_q <- df %>% 
   filter(apprehension_date >= "2023-10-01",
        apprehension_date <= "2025-07-15") %>% 
@@ -246,11 +251,33 @@ i213_country_per_cy_q <- df %>%
   rename(citizenship_country = citizenship_country_descr) %>% 
   mutate(source = "i213s")
 
+top_213 <- i213_country_per_cy_q %>% 
+  group_by(citizenship_country) %>% 
+  summarize(n = sum(n)) %>% 
+  arrange(desc(n))
+
 dat <- rbind(ddp_country_per_cy_q, i213_country_per_cy_q)
+
+top <- dat %>% 
+  group_by(citizenship_country) %>% 
+  summarize(n = sum(n)) %>% 
+  arrange(desc(n))
 
 dat_wide <- dat %>% pivot_wider(id_cols = c('cy_quarter', 'citizenship_country'), names_from = 'source', values_from = 'n', values_fill = 0) %>% 
   mutate(diff = DDP - i213s,
          pct_missing = diff / DDP)
+
+p1 <- dat %>% 
+  mutate(citizenship_country = case_when(citizenship_country %in% head(top$citizenship_country, 10) ~ citizenship_country,
+                                         TRUE ~ "ALL OTHERS")) %>% 
+  group_by(source, cy_quarter, citizenship_country) %>% 
+  summarize(n = sum(n)) %>% 
+  ggplot(aes(x = cy_quarter, y = n, fill = citizenship_country)) +
+  geom_col(position="fill") + 
+  facet_wrap(~source)
+
+ggplotly(p1)
+
 
 ```
 
@@ -271,8 +298,19 @@ i213_country_per_cy <- df %>%
 
 dat <- rbind(ddp_country_per_cy, i213_country_per_cy)
 
+p1 <- dat %>% 
+  mutate(citizenship_country = case_when(citizenship_country %in% head(top$citizenship_country, 10) ~ citizenship_country,
+                                         TRUE ~ "ALL OTHERS")) %>% 
+  group_by(source, cy, citizenship_country) %>% 
+  summarize(n = sum(n)) %>% 
+  ggplot(aes(x = cy, y = n, fill = citizenship_country)) +
+  geom_col(position="fill") + 
+  facet_wrap(~source)
+
+ggplotly(p1)
+
 dat_wide <- dat %>%
-  filter(n > 10) %>% 
+  # filter(n > 10) %>% 
   pivot_wider(id_cols = c('cy', 'citizenship_country'),
               names_from = 'source',
               values_from = 'n',
@@ -281,6 +319,43 @@ dat_wide <- dat %>%
          pct_missing = diff / DDP)
 
 ```
+
+
+```{r}
+
+ddp_gender_per_cy <- ddp_arrests_sea %>% 
+   mutate(gender_code = substr(gender, 0, 1) ) %>% 
+  filter(apprehension_date >= "2023-10-01",
+         apprehension_date <= "2025-07-15") %>% 
+  count(cy, gender_code) %>% 
+  mutate(source = "DDP")
+
+i213_gender_per_cy <- df %>% 
+  filter(apprehension_date >= "2023-10-01",
+       apprehension_date <= "2025-07-15") %>% 
+  count(cy, gender_code) %>% 
+  mutate(source = "i213s")
+
+dat <- rbind(ddp_gender_per_cy, i213_gender_per_cy)
+
+p1 <- dat %>% 
+  ggplot(aes(x = cy, y = n, fill = gender_code)) +
+  geom_col(position="fill") + 
+  facet_wrap(~source)
+
+ggplotly(p1)
+
+dat_wide <- dat %>%
+  # filter(n > 10) %>% 
+  pivot_wider(id_cols = c('cy', 'gender_code'),
+              names_from = 'source',
+              values_from = 'n',
+              values_fill = 0) %>% 
+  mutate(diff = DDP - i213s,
+         pct_missing = diff / DDP)
+
+```
+
 
 ```{r}
 
