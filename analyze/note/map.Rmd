@@ -964,6 +964,64 @@ p1
 
 ```
 
+```{r king_county_zoom}
+
+counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
+
+counties <- counties %>%
+  separate(col = 'ID', into = c("state", "county"), sep = ",", remove = FALSE) %>%
+  filter(state %in% c('washington', 'oregon'))
+
+counties$area <- as.numeric(st_area(counties))
+
+sites <- df %>% 
+  filter(state %in% c("WA"),
+         apprehension_date >= "2025-01-01") %>% 
+  select(long, lat) %>% 
+  na.omit()
+
+sites <- st_as_sf(sites, coords = c("long", "lat"),
+                   crs = 4326, agr = "constant") %>% 
+  count(geometry)
+
+
+# 
+# st_crs(dat) <- 4326
+# st_crs(dat$geom) <- 4326
+st_crs(sites) <- 4326
+st_crs(sites$geometry) <- 4326
+
+king_co_coords <- coord_sf(xlim = c(-124, -121), ylim = c(47, 48.5), expand = FALSE, crs = 4326)
+
+plot_sites <- function(data_to_plot) {ggplot(data = wa) +
+  geom_sf() +
+  geom_sf(data = wa, fill = NA) + 
+  geom_sf(data = counties, fill = NA) + 
+  geom_sf(data = data_to_plot, aes(size = n), shape = 21, color = "black", fill = "red", alpha=.7) +
+  # facet_wrap(~cy_quarter, nrow=1) +
+    king_co_coords +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid = element_blank()) +
+  scale_size_continuous(limits = c(1, 600)) +
+  labs(title = 'King County',
+       subtitle = "per I-213 forms",
+       caption = "I-213 data through Dec. 2025")}
+
+p1 <- sites %>%
+  plot_sites
+
+p1
+
+```
+
+
+
 ```{r}
 
 p1 <- df %>% 
